@@ -1,0 +1,429 @@
+#!/bin/bash
+# Claude Code PreToolUse guard for the frontend agent workflow (Frontend-Agent-Workflow).
+# Named guard-frontend.sh so it can sit next to the mobile kit's guard.sh.
+# Blocks: push outside origin, force/delete of protected branches, worktrees outside the
+# checkout's siblings, new Orca projects/tabs, rm -r outside the project (web build artifacts
+# excepted), edits in the primary worktree, Jira transitions not in jira-transitions.json, and
+# every write while read-only audit mode (/audit-issue) is on (incl. deploys/publishes).
+# stdin = hook JSON. exit 0 = allow, exit 2 + stderr = block.
+# One check_<tool> function per tool; unknown tools and unparseable input are allowed.
+PATH="$PATH:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+PROTECTED='main|master|develop'
+VTAG='v[0-9]+\.[0-9]+\.[0-9]+'
+
+block() { echo "DIBLOKIR oleh guard: $*" >&2; exit 2; }
+
+JQ=$(command -v jq) || block "jq tidak ditemukan, guard tidak bisa memeriksa perintah. Install jq (brew install jq / apt install jq)."
+PY=$(command -v python3)
+
+# resolve $1 against $2 (dir); pure string, python normalizes later
+join_path() { case $1 in /*) echo "$1";; *) echo "$2/$1";; esac; }
+
+# expand leading ~ / $HOME / ${HOME}; leaves other $vars untouched
+expand_home() {
+  case $1 in
+    '~') echo "$HOME";;
+    '~/'*) echo "$HOME/${1#\~/}";;
+    '$HOME'|'${HOME}') echo "$HOME";;
+    '$HOME/'*) echo "$HOME/${1#\$HOME/}";;
+    '${HOME}/'*) echo "$HOME/${1#\$\{HOME\}/}";;
+    *) echo "$1";;
+  esac
+}
+
+# every ref is a version tag vX.Y.Z (name, refs/tags/name, or name:refs/tags/name) and not a local branch
+version_tags_only() { # dir ref...
+  local d=$1 r s; shift
+  for r; do
+    s=${r%%:*}; s=${s#refs/tags/}
+    case $r in *:*) [ "${r#*:}" = "refs/tags/$s" ] || return 1;; esac
+    echo "$s" | grep -Eqx "$VTAG" || return 1
+    case ${r%%:*} in refs/tags/*) ;; *) ! git -C "$d" show-ref -q --verify "refs/heads/$s" 2>/dev/null || return 1;; esac
+  done
+}
+
+# git [global opts] push ...   ($d = directory git runs in)
+# Sets GSUB_OFF = index of git's subcommand among the args (so `git rm` isn't checked as rm).
+check_git() {
+  local d=$wd n=$# unk=''
+  while [ $# -gt 0 ]; do
+    case $1 in
+      -C) d=$(join_path "$(expand_home "$2")" "$wd"); shift 2;;
+      -c|--git-dir|--work-tree|--namespace|--super-prefix|--config-env) shift 2;;
+      --*=*|-p|-P|--paginate|--no-pager|--bare|--no-replace-objects|--no-optional-locks|--*-pathspecs) shift;;
+      -*) unk=1; shift;;
+      *) break;;
+    esac
+  done
+  GSUB_OFF=$((n - $#))
+  [ -n "$AUDIT" ] && check_git_audit "$@"
+  [ "$1" = worktree ] && case ${2:-} in add|remove|move) check_worktree "$d" "${@:2}";; esac
+  # unknown global option may have swallowed a value: if `push` appears anywhere, treat as push
+  if [ "$1" != push ] && [ -n "$unk" ]; then
+    while [ $# -gt 0 ] && [ "$1" != push ]; do shift; done
+  fi
+  [ "$1" = push ] || return 0
+  shift
+  local remote='' repo='' destructive='' bulk='' refs=() r dst br
+  while [ $# -gt 0 ]; do
+    case $1 in
+      --repo=*) repo=${1#--repo=};;
+      --repo) repo=$2; shift;;
+      -o|--push-option|--receive-pack|--exec) shift;;
+      --force*|--mirror|--delete) destructive=1;;
+      --tags|--follow-tags|--all|--branches) bulk=1;;
+      --*) ;;
+      -*[fd]*) destructive=1;;
+      -*) ;;
+      *) if [ -z "$remote" ]; then remote=$1; else refs+=("$1"); fi;;
+    esac
+    shift
+  done
+  [ -n "$remote" ] || remote=$repo  # positional remote wins over --repo
+  # Release pushes version tags to origin and upstream; explicit refs only, never force/delete/bulk
+  [ -z "$destructive$bulk" ] && [ ${#refs[@]} -gt 0 ] && version_tags_only "$d" "${refs[@]}" && return 0
+
+  br=$(git -C "$d" symbolic-ref --short -q HEAD 2>/dev/null)
+  if [ -z "$remote" ]; then
+    remote=$(git -C "$d" config "branch.$br.pushRemote" 2>/dev/null ||
+             git -C "$d" config remote.pushDefault 2>/dev/null ||
+             git -C "$d" config "branch.$br.remote" 2>/dev/null)
+    [ -n "$remote" ] || block "remote untuk 'git push' tidak bisa dipastikan. Tulis eksplisit: git push origin <branch>."
+  fi
+  if [ "$remote" != origin ]; then
+    local ou ru
+    ou=$(git -C "$d" remote get-url --push origin 2>/dev/null)
+    ru=$(git -C "$d" remote get-url --push "$remote" 2>/dev/null || echo "$remote")
+    [ -n "$ou" ] && [ "$ru" = "$ou" ] ||
+      block "push ke remote '$remote' dilarang; hanya boleh ke origin (fork). Gunakan: git push origin <branch>, lalu buat PR."
+  fi
+
+  [ ${#refs[@]} -eq 0 ] && refs=(HEAD)
+  for r in "${refs[@]}"; do
+    dst=${r#+}; dst=${dst##*:}; dst=${dst#refs/heads/}
+    [ "$dst" = HEAD ] && dst=$br
+    case $r in +*|:*) ;; *) [ -n "$destructive" ] || continue;; esac
+    if echo "$dst" | grep -Eqx "$PROTECTED"; then
+      block "force-push/hapus branch terlindungi '$dst' dilarang. Push tanpa --force/+, atau ke branch fitur."
+    fi
+  done
+}
+
+audit_block() { block "$1 dilarang: mode audit hanya-baca (/audit-issue). Catat temuan di laporan, jangan ubah repo/Jira."; }
+
+# audit mode: only read-only git subcommands; branch/tag only list, never create/delete
+check_git_audit() {
+  local s=${1:-} a list='' skip=''
+  shift
+  case $s in
+    ''|show|log|grep|blame|diff|status|ls-files|ls-tree|rev-parse|rev-list|describe|cat-file|for-each-ref|show-ref|shortlog|name-rev|merge-base|help|version|--version|--help) return 0;;
+    fetch) for a; do case $a in *:*) audit_block "git fetch $a (refspec menulis branch lokal)";; esac; done;;
+    reflog) case ${1:-} in expire|delete) audit_block "git reflog $1";; esac;;
+    branch|tag)
+      for a; do
+        [ -n "$skip" ] && { skip=''; continue; }
+        case $a in
+          -l|--list) list=1;;
+          --contains|--no-contains|--merged|--no-merged|--points-at|--sort|--format) skip=1;;
+          -a) [ "$s" = tag ] && audit_block "git tag -a";;
+          -d|-D|-m|-M|-c|-C|-f|-u|-s|-F|-e|--delete|--move|--copy|--force|--annotate|--sign|--edit-description|--unset-upstream|--set-upstream-to*|--track*|--file*|--message*) audit_block "git $s $a";;
+          -*) ;;
+          *) [ -n "$list" ] || audit_block "git $s $a";;
+        esac
+      done;;
+    remote)
+      case ${1:-} in -v|--verbose) shift;; esac
+      case ${1:-} in ''|get-url|show) ;; *) audit_block "git remote $1";; esac;;
+    config) for a; do case $a in --get|--get-all|--get-regexp|--list|-l) return 0;; esac; done; audit_block "git config";;
+    worktree) [ "${1:-}" = list ] || audit_block "git worktree ${1:-}";;
+    stash) case ${1:-} in list|show) ;; *) audit_block "git stash ${1:-}";; esac;;
+    *) audit_block "git $s";;
+  esac
+  return 0
+}
+
+# audit mode: glab read-only (gh is never blocked, user decision 2026-11-11): read verbs only (view/list/...), api GET without fields
+check_forge() {
+  local a prev=''
+  case ${1:-} in
+    ''|search|status|help|version|--version|--help|-h) ;;
+    auth) [ "${2:-}" = status ] || audit_block "gh/glab auth ${2:-}";;
+    api)
+      for a; do
+        case $a in -f*|-F*|--field*|--raw-field*|--input*) audit_block "gh/glab api $a";; esac
+        case $prev in -X|--method) [ "$a" = GET ] || audit_block "gh/glab api $prev $a";; esac
+        case $a in --method=*) [ "${a#*=}" = GET ] || audit_block "gh/glab api $a";; -X?*) [ "${a#-X}" = GET ] || audit_block "gh/glab api $a";; esac
+        prev=$a
+      done;;
+    *) case ${2:-} in view|list|ls|status|diff|checks|show|watch|-h|--help) ;; *) audit_block "gh/glab $1 ${2:-}";; esac;;
+  esac
+  return 0
+}
+
+# true when $1 resolves inside ${TMPDIR:-/tmp}/audit or /tmp/audit (symlinks like /tmp -> /private/tmp resolved)
+in_audit_dir() {
+  "$PY" -c '
+import os, sys
+def rp(p):
+    head, tail = p, ""
+    while not os.path.exists(head) and head != "/":
+        head, t = os.path.split(head); tail = os.path.join(t, tail) if tail else t
+    return os.path.normpath(os.path.join(os.path.realpath(head), tail))
+f = rp(sys.argv[1])
+sys.exit(0 if any(f.startswith(rp(r).rstrip("/") + "/") for r in sys.argv[2:]) else 1)
+' "$1" "${TMPDIR:-/tmp}/audit" /tmp/audit
+}
+
+# git worktree add/remove: only a sibling of the current checkout; remove only ticket
+# worktrees (<repo>-<number>) and never forced, so dirty work can't be lost (rules.md, Workspace & worktree)
+check_worktree() {
+  local d=$1 op=$2 p='' top
+  shift 2
+  [ "$op" = move ] && block "git worktree move dilarang: jangan memindah worktree. Minta user."
+  while [ $# -gt 0 ]; do
+    case $1 in
+      -b|-B|--reason) shift 2;;
+      -f|--force) [ "$op" = remove ] && block "git worktree remove --force dilarang: worktree yang masih ada perubahan tidak boleh dipaksa hapus. Commit + push dulu, atau minta user."; shift;;
+      -*) shift;;
+      *) [ -n "$p" ] || p=$1; shift;;
+    esac
+  done
+  [ -n "$p" ] || return 0
+  [ -n "$PY" ] || block "python3 tidak ditemukan, guard tidak bisa memeriksa path worktree."
+  top=$(git -C "$d" rev-parse --show-toplevel 2>/dev/null) || block "git worktree $op: repo tidak dikenali di $d."
+  p=$("$PY" -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$(join_path "$(expand_home "$p")" "$d")")
+  top=$("$PY" -c 'import os,sys; print(os.path.dirname(os.path.realpath(sys.argv[1])))' "$top")
+  [ "${p%/*}" = "$top" ] || block "git worktree $op hanya untuk folder sejajar checkout ini ($top/<repo>-<nomor tiket>), tulis path apa adanya tanpa variabel: $p (rules.md, Workspace & worktree)."
+  [ "$op" = remove ] && ! [[ ${p##*/} =~ -[0-9]+$|-rilis-v[0-9][0-9.]*$ ]] && block "git worktree remove hanya untuk worktree tiket <repo>-<nomor tiket> atau worktree rilis sementara <repo>-rilis-vX.Y.Z: ${p##*/} bukan worktree agen (worktree domain/milik user tidak dihapus agen)."
+  return 0
+}
+
+# orca: no new projects/repos or workspaces outside the user's domain (rules.md, Workspace & worktree)
+check_orca() {
+  local a
+  case "$1 ${2:-}" in
+    'repo add'|'project setup-'*) block "orca $1 $2 dilarang: agen tidak membuat project/repo Orca baru. Minta user.";;
+    'worktree create') [ -n "$AUDIT" ] && audit_block "orca worktree create";;
+    'terminal split') block "orca terminal split dilarang: agen tambahan = teammate (tool Agent dengan name \"<Nama>-<Label><n>\"); panelnya dibuka Claude Code otomatis (rules.md, Orkestrasi).";;
+    'terminal create'|'agent launch') block "orca $1 $2 dilarang: membuka tab baru. Agen tambahan = teammate (tool Agent dengan name), tampil sebagai panel split (rules.md, Orkestrasi).";;
+    'orchestration worker-start') case " $* " in *' --agent '*|*' --agent='*) block "worker-start --agent dilarang: membuka tab baru. Agen tambahan = teammate (tool Agent dengan name) (rules.md, Orkestrasi).";; esac;;
+  esac
+  for a; do
+    case $a in
+      --no-parent|new-child|new-top-level|--worktree=new-child|--worktree=new-top-level)
+        block "orca $a dilarang: semua agen bekerja di workspace domain (teammate di workspace ini). Lihat rules.md.";;
+    esac
+  done
+}
+
+# rm -r/-R/--recursive: every target must be strictly inside the project root
+check_rm() {
+  local rec='' endopt='' paths=() a bad py wts
+  for a; do
+    if [ -z "$endopt" ]; then
+      case $a in
+        --) endopt=1; continue;;
+        --recursive) rec=1; continue;;
+        --*) continue;;
+        -*[rR]*) rec=1; continue;;
+        -*) continue;;
+      esac
+    fi
+    paths+=("$(expand_home "$a")")
+  done
+  [ -n "$rec" ] || return 0
+  for a in ${paths[@]+"${paths[@]}"}; do
+    case $a in *'$'*|*'`'*|'~'*|*'{}'*) block "rm -r dengan variabel/path tak pasti ('$a') dilarang. Tulis path literal di dalam proyek.";; esac
+  done
+  [ ${#paths[@]} -gt 0 ] || block "rm -r tanpa path literal (mis. lewat xargs) dilarang. Tulis path di dalam proyek secara eksplisit."
+  # other worktrees of this repo + project folders the user listed in build-roots.txt: only rebuildable build artifacts
+  wts=$(git -C "$root" worktree list --porcelain 2>/dev/null | sed -n 's/^worktree //p'; sed -e 's/[[:space:]]*$//' -e '/^#/d' -e '/^$/d' "$HOME/.agent-workflow/build-roots.txt" 2>/dev/null)
+  bad=$(WTS="$wts" "$PY" -c '
+import os, sys
+ART = {"node_modules", ".next", ".nuxt", ".output", ".svelte-kit", "dist", "build", ".turbo", ".vite", ".parcel-cache", ".cache", "coverage", "playwright-report", "test-results", "storybook-static", ".angular"}
+c, root = sys.argv[1], os.path.realpath(sys.argv[2])
+wts = [os.path.realpath(w) for w in os.environ.get("WTS", "").splitlines() if w]
+QA = [os.path.realpath(q) for q in ("/tmp/qa", os.path.join(os.environ.get("TMPDIR") or "/tmp", "qa"))]
+def artifact(r):
+    if any(r.startswith(q + os.sep) for q in QA):  # temporary QA test output
+        return True
+    for w in wts:
+        if r.startswith(w + os.sep) and ART & set(os.path.relpath(r, w).split(os.sep)):
+            return True
+    return False
+for p in sys.argv[3:]:
+    n = os.path.normpath(os.path.join(c, p))
+    # trailing slash makes rm follow a symlink, so check its target
+    r = os.path.realpath(n) if p.endswith("/") else os.path.join(os.path.realpath(os.path.dirname(n)), os.path.basename(n))
+    if not r.startswith(root + os.sep) and not artifact(r):
+        print(p); break
+' "$wd" "$root" "${paths[@]}" 2>/dev/null) || block "path rm -r tidak bisa diverifikasi (python3 gagal)."
+  [ -z "$bad" ] || block "rm -r di luar proyek ($root) dilarang: '$bad'. Hapus hanya path di dalam proyek, atau artefak build web (node_modules, .next, .nuxt, .output, .svelte-kit, dist, build, .turbo, .vite, .parcel-cache, .cache, coverage, playwright-report, test-results, storybook-static, .angular) di worktree lain repo ini atau di folder project dari ~/.agent-workflow/build-roots.txt; isi /tmp/qa bebas."
+}
+
+# Tokenize like a shell (quotes kept together); one line per simple command, tokens joined by \x1f.
+# Strings run by `sh -c`/`eval`, and $(...)/`...` contents, are tokenized again as extra lines.
+TOKENIZER='
+import json, re, shlex, sys
+SEP = set("();<>|&\n")
+def toks(c):
+    c = re.sub(r"(?<!\\)((?:\\\\)*)\\\n", r"\1", c)  # line continuation = odd backslash run + newline (also inside single quotes: at worst over-blocks)
+    try:
+        l = shlex.shlex(c, posix=True, punctuation_chars="();<>|&\n")
+        l.whitespace = " \t\r"  # unquoted newline separates commands
+        l.whitespace_split = True; l.commenters = ""
+        return list(l)
+    except ValueError:  # unbalanced quotes: crude split, fail closed
+        return [t.strip("\"\x27") for t in re.findall(r"[();<>|&\n]+|[^\s();<>|&]+", c)]
+def segs(c, depth=0):
+    out, cur, prev = [], [], ""
+    for t in toks(c):
+        if t and all(ch in SEP for ch in t):
+            out.append(cur); cur = []; prev = t; continue
+        if not t.strip(): continue  # stray escaped whitespace
+        if depth < 3 and ("$(" in t or "`" in t or (re.search(r"\s", t) and (re.fullmatch(r"-\w*c", prev) or prev == "eval"))):
+            out += segs(t.replace("`", " "), depth + 1)
+        t = t.replace("`", "").replace("\n", " ").replace("\x1f", " ")
+        cur.append(t)
+        if t != "--": prev = t  # sh -c -- "cmd"
+    return out + [cur]
+cmd = (json.load(sys.stdin).get("tool_input") or {}).get("command") or ""
+for s in segs(cmd):
+    if s: print("\x1f".join(s))
+'
+
+# audit mode: hosting/registry deploys and publishes are writes to the outside world
+check_deploy() { # tool args...
+  local t=$1 a sub=''
+  shift
+  for a; do case $a in -*) ;; *) sub=$a; break;; esac; done
+  case $t in
+    vercel) case $sub in ls|list|inspect|logs|whoami|help) return 0;; esac
+            [ -z "$sub" ] && case " $* " in *' --version '*|*' -v '*|*' --help '*|*' -h '*) return 0;; esac
+            audit_block "vercel ${sub:-deploy}";;
+    netlify) [ "$sub" = deploy ] && audit_block "netlify deploy";;
+    firebase) case $sub in deploy|hosting:channel:deploy) audit_block "firebase $sub";; esac;;
+    wrangler) case $sub in deploy|publish) audit_block "wrangler $sub";;
+                pages) [[ " $* " == *" deploy "* || " $* " == *" publish "* ]] && audit_block "wrangler pages deploy";; esac;;
+    npm|pnpm|yarn) [ "$sub" = publish ] && audit_block "$t publish";;
+  esac
+  return 0
+}
+
+check_Bash() {
+  local segs w i c t prev gsub
+  [ -n "$PY" ] || block "python3 tidak ditemukan, guard tidak bisa memeriksa perintah Bash."
+  segs=$(printf '%s' "$input" | "$PY" -c "$TOKENIZER" 2>/dev/null) || block "perintah Bash tidak bisa diurai oleh guard."
+  root=$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null || echo "$cwd")
+  wd=$cwd   # follows cd/pushd inside the chained command
+  while IFS=$'\x1f' read -ra w; do
+    gsub=-1; prev=''
+    # any git/rm token starts a command, wherever it sits (sudo -u x, timeout 60, VAR=..., if/then, xargs ...)
+    for ((i = 0; i < ${#w[@]}; i++)); do
+      c=${w[$i]##*/}
+      case $c in
+        cd|pushd)  # only in command position, so `echo cd x` doesn't move wd
+          case $prev in ''|'!'|'{'|then|do|else|if|while|until|command|builtin)
+            t=$(expand_home "${w[$((i+1))]:-~}")
+            case $t in *'$'*|-*) wd=/;; *) wd=$(join_path "$t" "$wd");; esac;;
+          esac;;
+        git) GSUB_OFF=-1; check_git "${w[@]:$((i+1))}"; gsub=$((i + 1 + GSUB_OFF));;
+        orca) check_orca "${w[@]:$((i+1))}";;
+        glab) [ -n "$AUDIT" ] && check_forge "${w[@]:$((i+1))}";;
+        rm) [ $i -eq $gsub ] || check_rm "${w[@]:$((i+1))}";;
+        vercel|netlify|firebase|wrangler|npm|pnpm|yarn) [ -n "$AUDIT" ] && check_deploy "$c" "${w[@]:$((i+1))}";;
+      esac
+      prev=${w[$i]}
+    done
+  done <<< "$segs"
+}
+
+# Edit/Write/MultiEdit: the primary (main) worktree is read-only once the repo has a linked worktree
+# (Orca pattern); a plain checkout without linked worktrees is editable.
+check_edit() {
+  local f d pd gd cd_
+  f=$(printf '%s' "$input" | "$JQ" -r '.tool_input.file_path // .tool_input.notebook_path // empty' 2>/dev/null)
+  [ -n "$f" ] || return 0
+  [ -n "$PY" ] || block "python3 tidak ditemukan, guard tidak bisa memeriksa path."
+  f=$(join_path "$(expand_home "$f")" "$cwd")
+  if [ -n "$AUDIT" ]; then
+    in_audit_dir "$f" || audit_block "edit file di luar folder kerja audit ${TMPDIR:-/tmp}/audit/ ($f)"
+    return 0
+  fi
+  d=$("$PY" -c 'import os,sys; print(os.path.dirname(os.path.realpath(sys.argv[1])))' "$f") || return 0
+  while [ ! -d "$d" ] && [ "$d" != / ]; do d=$(dirname "$d"); done  # new file: nearest existing parent
+  pd=$(git -C "$d" rev-parse --absolute-git-dir 2>/dev/null) || return 0  # not in a git repo
+  cd_=$(git -C "$d" rev-parse --git-common-dir 2>/dev/null)
+  case $cd_ in /*) ;; *) cd_="$d/$cd_";; esac
+  gd=$(cd -P "$cd_" 2>/dev/null && pwd -P) || return 0
+  pd=$(cd -P "$pd" 2>/dev/null && pwd -P) || return 0
+  [ "$pd" = "$gd" ] || return 0
+  [ "$(git -C "$d" worktree list --porcelain 2>/dev/null | grep -c '^worktree ')" -gt 1 ] && block "edit file di worktree utama dilarang: $f. Kerjakan di checkout workspace domain (lihat rules.md, Workspace & worktree)."
+  return 0
+}
+
+# transitionJiraIssue (or an executor call naming a transition): only transition ids allowed for the project in ${AGENT_WORKFLOW_STATE:-~/.agent-workflow}/jira-transitions.json
+check_jira() {
+  local cfg=${AGENT_WORKFLOW_STATE:-$HOME/.agent-workflow}/jira-transitions.json
+  local key id proj
+  key=$(printf '%s' "$input" | "$JQ" -r '.tool_input.issueIdOrKey // .tool_input.inputs.issueIdOrKey // empty' 2>/dev/null)
+  id=$(printf '%s' "$input" | "$JQ" -r '.tool_input.transition.id // .tool_input.inputs.transition.id // empty' 2>/dev/null)
+  proj=$(printf '%s' "$key" | sed -E 's/-[0-9]+$//')
+  "$JQ" -e type "$cfg" >/dev/null 2>&1 || block "config transisi Jira tidak ada/rusak ($cfg). Minta user: jalankan setup transisi."
+  "$JQ" -e --arg p "$proj" 'has($p)' "$cfg" >/dev/null 2>&1 || block "project '$proj' belum punya daftar transisi. Minta user: jalankan setup transisi."
+  "$JQ" -e --arg p "$proj" --arg i "$id" '.[$p].allow // [] | map(tostring) | index($i) != null' "$cfg" >/dev/null 2>&1 ||
+    block "transisi id '$id' untuk $proj tidak diizinkan. Done hanya dipindah kolega; pindahkan hanya ke status yang ada di daftar allow."
+}
+
+input=$(cat)
+tool=$(printf '%s' "$input" | "$JQ" -r '.tool_name // empty' 2>/dev/null) || exit 0
+cwd=$(printf '%s' "$input" | "$JQ" -r '.cwd // empty' 2>/dev/null)
+[ -n "$cwd" ] || cwd=$PWD
+
+# read-only audit mode (/audit-issue): env AGENT_AUDIT=1, or bin/audit-mode.sh marked one of our
+# ancestor pids, i.e. the Claude session running this hook (SPV). The SPV's guard records
+# session-<session_id> -> pid so its teammates (agent teams, not our descendants; their Claude runs
+# with --parent-session-id) are audit too while that pid marker exists.
+# shortcut: shell writes (sed -i, > file) are not caught in audit mode; upgrade with a sandbox if agents start writing via shell
+AUDIT=''
+if [ "${AGENT_AUDIT:-}" = 1 ]; then
+  AUDIT=1
+else
+  mk=${AGENT_WORKFLOW_STATE:-$HOME/.agent-workflow}/audit p=$$
+  if [ -d "$mk" ]; then
+    for _ in 1 2 3 4 5 6 7 8; do
+      if [ -f "$mk/$p" ]; then
+        AUDIT=1
+        sid=$(printf '%s' "$input" | "$JQ" -r '.session_id // empty' 2>/dev/null)
+        [ -n "$sid" ] && echo "$p" > "$mk/session-$sid"
+        break
+      fi
+      read -r pp cmd < <(ps -o ppid=,command= -p "$p" 2>/dev/null)
+      case $cmd in *' --parent-session-id '*)
+        sid=${cmd#* --parent-session-id }; sid=${sid%% *}
+        lead=$(cat "$mk/session-$sid" 2>/dev/null)
+        [ -n "$lead" ] && [ -f "$mk/$lead" ] && { AUDIT=1; break; } ;;
+      esac
+      p=$pp
+      [ -n "$p" ] && [ "$p" -gt 1 ] || break
+    done
+  fi
+fi
+
+case $tool in
+  Bash) check_Bash;;
+  Edit|Write|MultiEdit|NotebookEdit) check_edit;;
+  mcp__*Atlassian*__*)  # connector name differs per machine: claude_ai_Atlassian, Atlassian, Atlassian_MCP, ...
+    verb=$(printf '%s' "${tool##*__}" | tr '[:upper:]' '[:lower:]')
+    if [ -n "$AUDIT" ]; then
+      case $verb in create*|edit*|add*|update*|transition*|executewrite|executedestructive) audit_block "$tool";; esac
+    elif [ "$verb" = transitionjiraissue ]; then
+      check_jira
+    else  # generic executor (Atlassian_MCP executeWrite/executeDestructive {name, inputs}) must not bypass the check
+      case $verb in execute*)
+        op=$(printf '%s' "$input" | "$JQ" -r '.tool_input.name // empty' 2>/dev/null | tr '[:upper:]' '[:lower:]')
+        case $op in *transition*) check_jira;; esac;;
+      esac
+    fi;;
+esac
+exit 0
