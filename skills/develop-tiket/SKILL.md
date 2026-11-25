@@ -1,11 +1,11 @@
 ---
 name: develop-tiket
-description: Kerjakan tiket Jira frontend web In Progress sampai Ready To Review (gerbang validasi, worktree tiket, Matriks env, rencana, kode TDD, review, uji Playwright per ukuran layar + aksesibilitas, deploy pratinjau, PR/MR, komentar, geser tiket). Dipanggil lewat `/develop-tiket KODE... [--solo|--tim] [--batch|--separate] [--uat]` dari workspace domain Orca. Use when asked to develop, implement, or fix a Jira ticket for the web frontend; kata kunci - kerjakan tiket, develop tiket, implementasi tiket.
+description: Kerjakan tiket frontend web In Progress sampai Ready To Review (gerbang validasi, worktree tiket, Matriks env, rencana, kode TDD, review, uji Playwright per ukuran layar + aksesibilitas, deploy pratinjau, PR/MR, komentar, geser tiket). Dipanggil lewat `/develop-tiket KODE... [--solo|--tim] [--batch|--separate] [--uat]` dari workspace domain Orca. Use when asked to develop, implement, or fix a ticket (Jira, GitHub, GitLab, ...) for the web frontend; kata kunci - kerjakan tiket, develop tiket, implementasi tiket.
 argument-hint: KODE-TIKET... [--solo|--tim] [--batch|--separate] [--uat]
 ---
 Kerjakan tiket di `$ARGUMENTS`. Sesi ini = **SPV**: ikuti `~/.claude/agents/spv.md` (tidak menulis kode produk, tidak memindah ke Done).
 
-Baca dulu (jangan disalin): `~/.claude/skills/_frontend-workflow-shared/rules.md`, `browser.md`, `credentials.md`, `deploy-release.md`, `report-format.md`, dan `~/.claude/agents/{planner,coder,reviewer,qa,release}.md`. Skrip: `$FRONTEND_WORKFLOW_DIR/bin/<skrip>`; `lock.sh`/`port-pick.sh` diawali `AGENT_LOCK_PID=$PPID`.
+Baca dulu (jangan disalin): `~/.claude/skills/_frontend-workflow-shared/rules.md`, `board.md`, `browser.md`, `credentials.md`, `deploy-release.md`, `report-format.md`, dan `~/.claude/agents/{planner,coder,reviewer,qa,release}.md`. Skrip: `$FRONTEND_WORKFLOW_DIR/bin/<skrip>`; `lock.sh`/`port-pick.sh` diawali `AGENT_LOCK_PID=$PPID`.
 
 **Alur** (`--batch` default; terpisah dari `--solo`/`--tim`):
 - **`--batch`:** semua tiket = satu batch: satu rencana, satu branch batch lokal, **satu build produksi + server preview** untuk QA, satu deploy pratinjau batch bila hosting memakai CLI. Proses berat jalan sekali untuk semua tiket, di **titik tunggu** langkah 5 dan 9.

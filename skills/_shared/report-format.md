@@ -64,7 +64,7 @@ Satu dokumen per audit (dibuat di awal dengan bagian kosong "belum diisi", lalu 
 `repo-markdown` + mode audit: selama mode audit, laporan ditulis di `${TMPDIR:-/tmp}/audit/<slug>/laporan.md`; setelah `audit-mode.sh off`, SPV menyalinnya ke worktree dokumen dan push (satu-satunya tulisan, sesudah audit selesai).
 
 ## Laporan rilis (`/branch-manager`)
-Judul `Perubahan rilis vX.Y.Z`: (1) mermaid branch tiket → `<protected>` → `<primary>` → tag → production; (2) versi + hash `<primary>`, `<protected>`, `<sha-rilis>`; (3) tabel `KODE | Ringkasan | Branch | PR/MR | Programmer | Status Jira`; (4) commit tak terlacak dan tiket belum Done; (5) Matriks env production; (6) regresi penuh di staging (URL + hash + env API): spec → hasil → tiket terkait; (7) rekomendasi agen; (8) deploy production (URL + hash), smoke live, PR rilis, tag.
+Judul `Perubahan rilis vX.Y.Z`: (1) mermaid branch tiket → `<protected>` → `<primary>` → tag → production; (2) versi + hash `<primary>`, `<protected>`, `<sha-rilis>`; (3) tabel `KODE | Ringkasan | Branch | PR/MR | Programmer | Status tiket`; (4) commit tak terlacak dan tiket belum Done; (5) Matriks env production; (6) regresi penuh di staging (URL + hash + env API): spec → hasil → tiket terkait; (7) rekomendasi agen; (8) deploy production (URL + hash), smoke live, PR rilis, tag.
 
 ## Komentar tiket
 Ditulis seperti rekan satu tim yang sopan, bisa dipahami PM/QA/bisnis.

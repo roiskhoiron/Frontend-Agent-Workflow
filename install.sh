@@ -53,7 +53,7 @@ S="$C/settings.json"
 [ -f "$S" ] || echo '{}' > "$S"
 [ -e "$S.bak-frontend-workflow" ] || cp "$S" "$S.bak-frontend-workflow"  # keep the first original
 tmp=$(mktemp)
-jq --arg cmd "\"$REPO/hooks/guard-frontend.sh\"" --arg m 'Bash|Edit|Write|MultiEdit|NotebookEdit|mcp__.*Atlassian.*__.*' '
+jq --arg cmd "\"$REPO/hooks/guard-frontend.sh\"" --arg m 'Bash|Edit|Write|MultiEdit|NotebookEdit|mcp__.*Atlassian.*__.*|mcp__.*[Gg]it[HhLl][a-z]*__.*' '
   def isguard: any((.hooks // [])[]?; .command | tostring | test("/guard-frontend\\.sh\"?$"));
   .hooks.PreToolUse = ((.hooks.PreToolUse // [])
     | if any(.[]; isguard) then map(if isguard then .matcher = $m | .hooks = [{type:"command",command:$cmd}] else . end)

@@ -1,11 +1,11 @@
 ---
 name: rilis-tiket
-description: Tindak lanjut feedback QA per tiket Jira frontend web (Ready To Review/Done) - kembalikan ke Todo, deploy ke staging atau production atas permintaan, atau audit + merge PR/MR tiket ke branch integrasi. Dipanggil lewat `/rilis-tiket KODE...`. Use when asked to follow up QA feedback, deploy a ticket to staging, or merge a ticket PR; kata kunci - rilis tiket, feedback QA, tolak tiket, deploy staging, merge PR tiket.
+description: Tindak lanjut feedback QA per tiket frontend web (Ready To Review/Done) - kembalikan ke Todo, deploy ke staging atau production atas permintaan, atau audit + merge PR/MR tiket ke branch integrasi. Dipanggil lewat `/rilis-tiket KODE...`. Use when asked to follow up QA feedback, deploy a ticket to staging, or merge a ticket PR; kata kunci - rilis tiket, feedback QA, tolak tiket, deploy staging, merge PR tiket.
 argument-hint: KODE...
 ---
 Tindak lanjuti feedback QA untuk `$ARGUMENTS`. Sesi ini = **Release**: ikuti `~/.claude/agents/release.md`. Keputusan (izin Todo, merge, production) ke user lewat chat: ringkasan + satu saran. Rilis per versi bukan di sini: itu `/branch-manager --rilis`.
 
-Baca dulu: `~/.claude/skills/_frontend-workflow-shared/rules.md`, `deploy-release.md`, `report-format.md`, `credentials.md`. Remote: `origin` = fork, `upstream` = repo utama.
+Baca dulu: `~/.claude/skills/_frontend-workflow-shared/rules.md`, `board.md`, `deploy-release.md`, `report-format.md`, `credentials.md`. Remote: `origin` = fork, `upstream` = repo utama.
 
 ```mermaid
 flowchart LR
@@ -32,4 +32,4 @@ flowchart LR
 Memindah tiket ke Done, merge PR rilis ke `<primary>`, deploy production atau merge tanpa "ya".
 
 ## Berhenti lebih awal / galat
-Atlassian MCP atau `gh`/`glab` tidak terjangkau, id Todo belum ada → berhenti dan tanya. Deploy terhenti → lepas kunci `deploy:<env>` sebelum lapor.
+Platform tiket atau `gh`/`glab` tidak terjangkau, id Todo belum ada → berhenti dan tanya. Deploy terhenti → lepas kunci `deploy:<env>` sebelum lapor.

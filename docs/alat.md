@@ -27,7 +27,7 @@
 ## MCP
 | MCP / connector | Dipakai untuk |
 |---|---|
-| Atlassian (Jira) | Baca tiket, komentar, transisi (nama tool berbeda per mesin, mis. `mcp__claude_ai_Atlassian__*`) |
+| Platform tiket (sesuai memory project) | GitHub/GitLab lewat `gh`/`glab` (atau MCP GitHub/GitLab); Jira lewat connector Atlassian (nama tool berbeda per mesin, mis. `mcp__claude_ai_Atlassian__*`); Linear lewat connector Linear. Operasi lengkap: `skills/_shared/board.md` |
 | Claude Docs | Hanya bila platform dokumentasi = `claude-docs` |
 | Figma (bila tersedia) | Membaca mockup |
 

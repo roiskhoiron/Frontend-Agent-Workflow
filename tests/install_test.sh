@@ -25,7 +25,7 @@ assert_eq no "$([ -e "$H/.claude/skills/_shared" ] && echo yes || echo no)" "_sh
 assert_eq "$K/agents/spv.md" "$(readlink "$H/.claude/agents/spv.md")" "agent symlink"
 assert_eq 1 "$(jq '[.hooks.PreToolUse[]|select(.hooks[0].command|test("guard-frontend.sh"))]|length' "$S")" "guard hook once"
 assert_eq "\"$K/hooks/guard-frontend.sh\"" "$(jq -r '.hooks.PreToolUse[]|select(.hooks[0].command|test("guard-frontend"))|.hooks[0].command' "$S")" "guard path quoted"
-assert_eq 'Bash|Edit|Write|MultiEdit|NotebookEdit|mcp__.*Atlassian.*__.*' "$(jq -r '.hooks.PreToolUse[]|select(.hooks[0].command|test("guard-frontend"))|.matcher' "$S")" "guard matcher"
+assert_eq 'Bash|Edit|Write|MultiEdit|NotebookEdit|mcp__.*Atlassian.*__.*|mcp__.*[Gg]it[HhLl][a-z]*__.*' "$(jq -r '.hooks.PreToolUse[]|select(.hooks[0].command|test("guard-frontend"))|.matcher' "$S")" "guard matcher"
 assert_eq 1 "$(jq '[.hooks.PreToolUse[]|select(.hooks[0].command=="rtk hook claude")]|length' "$S")" "other hook preserved"
 assert_eq "Bash|Edit" "$(jq -r --arg c "$MG" '.hooks.PreToolUse[]|select(.hooks[0].command==$c)|.matcher' "$S")" "mobile guard.sh entry untouched"
 assert_eq yes "$([ -f "$S.bak-frontend-workflow" ] && echo yes)" "backup made"

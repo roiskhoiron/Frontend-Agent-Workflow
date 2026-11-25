@@ -13,13 +13,13 @@ Berlaku untuk semua agen dan skill: skill flow (`/validate-tiket`, `/develop-tik
 - Skrip: `$FRONTEND_WORKFLOW_DIR/bin/<skrip>`. Jika `FRONTEND_WORKFLOW_DIR` kosong, isi dengan folder repo:
   `export FRONTEND_WORKFLOW_DIR="$(cd "$(readlink ~/.claude/skills/_frontend-workflow-shared)/../.." && pwd -P)"`
   Tiap panggilan Bash = shell baru: ulangi export ini di awal panggilan yang memakai skrip.
-- State lokal (bukan di repo, dipakai bersama kit Mobile bila terpasang): `${AGENT_WORKFLOW_STATE:-$HOME/.agent-workflow}/` — `jira-transitions.json`, kunci di `locks/`, penanda mode audit di `audit/`, daftar `build-roots.txt` (diisi user).
+- State lokal (bukan di repo, dipakai bersama kit Mobile bila terpasang): `${AGENT_WORKFLOW_STATE:-$HOME/.agent-workflow}/` — `board-status.json` (status papan; `jira-transitions.json` kit Mobile juga dibaca), kunci di `locks/`, penanda mode audit di `audit/`, daftar `build-roots.txt` (diisi user).
 - **Lokasi khusus project tidak pernah ditulis di konfigurasi global** (agen, skill, rules, guard, CLAUDE.md global). Semuanya ada di **memory project** Claude Code (`MEMORY.md` project, tipe `reference`) dan `## Catatan agen` di `CLAUDE.md` project. Belum ada → periksa dulu, tanya user sekali (dengan satu saran), simpan, lalu pakai. Path berubah/tidak ditemukan → perbarui memory itu setelah bertanya.
 
 ### Isi memory project (dibaca semua skill)
 | Kunci | Isi | Diisi oleh |
 |---|---|---|
-| Platform tiket | Jira (default) + prefix KODE project | `/setup-board` |
+| Platform tiket | **tidak ada default** (none → tanya user): Jira, GitHub Projects/Issues, GitLab Issue Board, Linear, ...; lokasi board, prefix KODE, nama status (`board.md`) | `/setup-board` |
 | Platform dokumentasi | `repo-markdown` (default), `claude-docs`, atau lainnya + lokasinya | `/setup-docs` |
 | Sumber dokumen | folder/repo business discovery, desain/mockup (Figma), kontrak API (OpenAPI, Pact), blueprint | `/sync-docs` |
 | Branch project | `<primary>` = branch produksi (sumber hotfix, tujuan PR rilis); `<protected>` = branch integrasi (sumber dan tujuan PR tiket); remote fork/utama bila bukan `origin`/`upstream`; **strategi merge** PR tiket (squash / merge commit) | `/setup-worktree` |
@@ -63,7 +63,7 @@ Management (SPV, Planner, Validator, Reviewer, Release) memutuskan dan berbicara
 - `git push` ke remote selain `origin` (fork), termasuk `--tags` dan hapus branch. Pengecualian: tag versi `vX.Y.Z` yang ditulis eksplisit (tanpa force/hapus) boleh ke `origin` dan `upstream`.
 - Force-push atau hapus `main`/`master`/`develop`.
 - `rm -r`/`rm -rf` di luar folder project. Pengecualian: artefak yang bisa dibuat ulang (`node_modules`, `.next`, `.nuxt`, `.output`, `.svelte-kit`, `dist`, `build`, `.turbo`, `.vite`, `.parcel-cache`, `.cache`, `coverage`, `playwright-report`, `test-results`, `storybook-static`, `.angular`) di worktree lain repo yang sama atau di folder dari `build-roots.txt`; isi `/tmp/qa/` bebas dihapus.
-- Memindah tiket Jira ke status yang tidak ada di `jira-transitions.json` (Done tidak pernah ada di sana).
+- Menggeser status tiket ke nilai yang tidak ada di `board-status.json` (Jira, GitHub Projects, label status), dan menutup issue (`gh`/`glab issue close`, MCP `state: closed`): Done tidak pernah boleh.
 - Edit/Write file di worktree primary, untuk repo yang punya worktree tambahan (pola Orca).
 - Membuka terminal/agen sendiri (`orca terminal split|create`, `orca agent launch`, `worker-start --agent`); membuat project/repo/workspace Orca baru.
 - `git worktree add` di luar folder sejajar checkout; `git worktree remove` selain worktree tiket `<repo>-<nomor>` dan worktree rilis `<repo>-rilis-vX.Y.Z`, atau dengan `--force`; `git worktree move`.
@@ -72,12 +72,13 @@ Management (SPV, Planner, Validator, Reviewer, Release) memutuskan dan berbicara
 Jangan mencari jalan memutar. Jika diblokir, laporkan pesannya ke SPV/user.
 
 ## Selalu berhenti dan tanya
-1. Deploy ke **production**.
-2. Sebelum memulai hotfix (sementara manual).
-3. Kredensial tidak ditemukan, atau file kredensial tidak di-gitignore.
-4. Dua fix hotfix bentrok (mode tim: SPV minta analisis opsi dari Planner dulu).
-5. Endpoint di server tujuan **Belum ada** / **Beda kontrak** sebelum deploy staging atau production.
-6. `deploy:<env>` sedang dipegang tiket lain: tunggu atau tanya.
+1. Platform tiket belum tercatat di memory project (none): tanya dulu, jangan menebak (`board.md`).
+2. Deploy ke **production**.
+3. Sebelum memulai hotfix (sementara manual).
+4. Kredensial tidak ditemukan, atau file kredensial tidak di-gitignore.
+5. Dua fix hotfix bentrok (mode tim: SPV minta analisis opsi dari Planner dulu).
+6. Endpoint di server tujuan **Belum ada** / **Beda kontrak** sebelum deploy staging atau production.
+7. `deploy:<env>` sedang dipegang tiket lain: tunggu atau tanya.
 
 Cara tanya: teammate → SPV lewat SendMessage; SPV/sesi utama → tanya di chat dengan ringkasan temuan + **satu saran**.
 
@@ -139,18 +140,8 @@ Workspace = item Orca tempat terminal agen tampil: git worktree, atau workspace 
 - Tag versi `vX.Y.Z` (beranotasi) dibuat Release setelah PR rilis di-merge manusia, di commit hasil merge, di-push ke `upstream` dan `origin`. Tag tidak pernah di-force atau dihapus.
 - Push branch hanya ke `origin`.
 
-## Setup transisi Jira (sekali per project)
-Hook menolak transisi sebelum project punya daftar. Jika ditolak "belum punya daftar transisi":
-1. `getTransitionsForJiraIssue` (Atlassian MCP) pada satu tiket project itu.
-2. Tunjukkan tabel `id → nama status` ke user.
-3. User memilih id untuk **Todo**, **In Progress**, dan **Ready To Review** (jangan pernah Done).
-4. Tulis lewat Bash, gabungkan dengan isi lama:
-```bash
-S=${AGENT_WORKFLOW_STATE:-$HOME/.agent-workflow}; F="$S/jira-transitions.json"
-mkdir -p "$S" && { [ -s "$F" ] || echo '{}' > "$F"; } &&
-jq '. + {"PROJ":{"allow":["11","21","31"],"names":{"11":"Todo","21":"In Progress","31":"Ready To Review"}}}' "$F" > "$F.tmp" && mv "$F.tmp" "$F"
-```
-Nama tool Atlassian berbeda per mesin (mis. `mcp__claude_ai_Atlassian__*` atau `mcp__Atlassian__*`); pakai yang tersedia di sesi.
+## Platform tiket
+Tidak ada platform default. Platform (Jira, GitHub Projects/Issues, GitLab Issue Board, Linear, ...), prefix KODE, cara baca/komentar/geser status, dan "Setup status papan" ada di `board.md`. Memory project belum mencatat platform → `/setup-board` bertanya ke user lebih dulu; user bingung → saran GitHub Projects (repo GitHub) atau GitLab Issue Board (repo GitLab).
 
 ## Gaya tulis
 Bahasa Indonesia, singkat padat, ramah pemula; tabel dan diagram mermaid lebih dulu daripada paragraf. Komentar tiket: humanis, bahasa awam, orang pertama "aku", baris pertama memuat link laporan. Detail: `report-format.md`. Kredensial tidak pernah ditulis ke dokumen, tiket, PR/MR, atau commit.

@@ -1,6 +1,6 @@
 ---
 name: audit-issue
-description: Audit terperinci permintaan atau keluhan frontend web yang belum menjadi tiket Jira (kode, riwayat git, log, reproduksi di browser, lampiran mockup/PDF/gambar), hanya-baca, hasilnya satu laporan dengan saran tiket. Dipanggil lewat `/audit-issue "<teks>" [--solo|--tim] [lampiran...]`. Use when asked to audit an issue, complaint, or question without a Jira ticket; kata kunci - audit issue, audit masalah, telusuri keluhan.
+description: Audit terperinci permintaan atau keluhan frontend web yang belum menjadi tiket (kode, riwayat git, log, reproduksi di browser, lampiran mockup/PDF/gambar), hanya-baca, hasilnya satu laporan dengan saran tiket. Dipanggil lewat `/audit-issue "<teks>" [--solo|--tim] [lampiran...]`. Use when asked to audit an issue, complaint, or question without a ticket; kata kunci - audit issue, audit masalah, telusuri keluhan.
 argument-hint: "\"<teks permintaan>\" [--solo|--tim] [lampiran...]"
 ---
 Audit permintaan di `$ARGUMENTS`: teks dalam kutip, flag `--solo`/`--tim` (opsional), lalu lampiran. Peranmu = **SPV audit**. Audit **hanya-baca**: tidak mengubah repo, tidak membuat/mengomentari/menggeser tiket, tidak deploy. Guard memaksanya selama mode audit menyala.

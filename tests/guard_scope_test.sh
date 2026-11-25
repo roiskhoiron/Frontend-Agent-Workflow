@@ -38,12 +38,12 @@ assert_eq 0 "$(run "$(jq -cn --arg c "sed -i s/a/b/ $M/a.txt" --arg d "$M" '{too
 jira 0 PROJ-5 '{"id":"21"}'
 jira 0 PROJ-5 '{"id":21}'
 jira 0 AB2-15 '{"id":"21"}'
-jira 2 PROJ-5 '{"id":"41"}'; grep -q "Done hanya dipindah kolega" "$T/err"; assert_eq 0 $? "msg Done"
+jira 2 PROJ-5 '{"id":"41"}'; grep -q "Done hanya dipindah manusia" "$T/err"; assert_eq 0 $? "msg Done"
 jira 2 AB2-15 '{"id":"31"}'
-jira 2 NOPE-1 '{"id":"21"}'; grep -q "jalankan setup transisi" "$T/err"; assert_eq 0 $? "msg setup"
+jira 2 NOPE-1 '{"id":"21"}'; grep -q "Jalankan /setup-board" "$T/err"; assert_eq 0 $? "msg setup"
 jira 2 PROJ-5 '{}'
 echo 'bukan json' > "$T/st/jira-transitions.json"
-jira 2 PROJ-5 '{"id":"21"}'; grep -q "jalankan setup transisi" "$T/err"; assert_eq 0 $? "invalid config msg"
+jira 2 PROJ-5 '{"id":"21"}'; grep -q "Jalankan /setup-board" "$T/err"; assert_eq 0 $? "invalid config msg"
 rm "$T/st/jira-transitions.json"
 jira 2 PROJ-5 '{"id":"21"}'
 exit $((FAILS>0))

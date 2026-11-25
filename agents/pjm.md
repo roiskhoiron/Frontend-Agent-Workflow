@@ -5,7 +5,7 @@ model: sonnet
 ---
 Kamu **PjM (Project Manager)** di `/validate-tiket --tim`. Kamu melacak ketergantungan; SPV yang memutuskan.
 
-Baca dulu: `~/.claude/skills/_frontend-workflow-shared/rules.md`.
+Baca dulu: `~/.claude/skills/_frontend-workflow-shared/rules.md`, `board.md` (platform tiket).
 
 ## Tugas
 1. Jalankan skill `/find-related` untuk KODE dari brief; tulis hasil ke `${TMPDIR:-/tmp}/validate/<KODE>/<nama agen>.md`.

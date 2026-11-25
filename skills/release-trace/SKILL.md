@@ -1,6 +1,6 @@
 ---
 name: release-trace
-description: Skill internal workflow Frontend. Menelusuri tiap commit rilis (primary..protected) ke PR/MR, KODE tiket, programmer, dan status Jira; menandai commit tak terlacak, tiket belum Done, dan PR revert. Dipakai /branch-manager.
+description: Skill internal workflow Frontend. Menelusuri tiap commit rilis (primary..protected) ke PR/MR, KODE tiket, programmer, dan status tiket; menandai commit tak terlacak, tiket belum Done, dan PR revert. Dipakai /branch-manager.
 argument-hint: "<PREFIX...>"
 ---
 Tracing rilis untuk prefix `$ARGUMENTS`. Baca: `deploy-release.md` (Rilis).
@@ -13,11 +13,11 @@ Tracing rilis untuk prefix `$ARGUMENTS`. Baca: `deploy-release.md` (Rilis).
    - PR/MR asal (`gh pr view <N> --repo <upstream> --json headRefName,author,url,title` / `glab mr view <N>`); `pr=-` → `gh api repos/<upstream>/commits/<sha>/pulls`; tetap tidak ada → tandai.
    - KODE: kolom `kode`; `-` → judul PR, lalu `headRefName`; tetap tidak ada → **tak terlacak**.
    - Programmer = pembuat PR + author commit (beda → keduanya).
-   - Status Jira tiap KODE (`getJiraIssue`).
+   - Status tiket tiap KODE (operasi **Baca tiket**, `board.md`).
    - `revert: <KODE> keluar dari rilis ...` dan pasangan unrevert-nya → **dikeluarkan**.
 
 ## Keluaran
-`${TMPDIR:-/tmp}/rilis/<vX.Y.Z>/trace.md`: `<sha-rilis>`, tabel `KODE | Ringkasan | Branch | PR/MR | Programmer | Status Jira`, daftar tak terlacak, belum Done, dikeluarkan.
+`${TMPDIR:-/tmp}/rilis/<vX.Y.Z>/trace.md`: `<sha-rilis>`, tabel `KODE | Ringkasan | Branch | PR/MR | Programmer | Status tiket`, daftar tak terlacak, belum Done, dikeluarkan.
 
 ## Tidak boleh
 Mengubah branch/tag; memindah tiket.

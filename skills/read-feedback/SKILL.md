@@ -6,7 +6,7 @@ argument-hint: KODE
 Baca feedback terakhir `$ARGUMENTS` (baca saja). Baca: `rules.md`.
 
 ## Langkah
-1. `getJiraIssue` + komentar: status (Ready To Review / Done; lainnya → golongan **di luar cakupan**).
+1. Operasi **Baca tiket + komentar** (`board.md`): status (Ready To Review / Done; lainnya → golongan **di luar cakupan**).
 2. PR/MR tiket (`gh pr list --repo <upstream> --state all --search <KODE>` / `glab mr list --all --search <KODE>`) + komentar review.
 3. **Feedback terakhir** = komentar manusia terbaru (tiket + PR/MR) setelah komentar agen terakhir.
 4. Golongkan:

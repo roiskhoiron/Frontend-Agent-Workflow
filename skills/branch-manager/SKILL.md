@@ -5,7 +5,7 @@ argument-hint: --rilis KODE-TIKET
 ---
 Siapkan rilis satu versi (`$ARGUMENTS`; `KODE-TIKET` = tiket tempat dokumen rilis dikomentari). Sesi ini = **Release (Agen First)**: ikuti `~/.claude/agents/release.md`. Agen mengerjakan semua langkah dulu, lalu bertanya: **Konfirmasi / Tolak / Ikuti rekomendasi agen**. Argumen selain `--rilis KODE` (mis. `--hotfix`) → belum ada, berhenti dan tanya.
 
-Baca dulu: `~/.claude/skills/_frontend-workflow-shared/rules.md`, `deploy-release.md`, `report-format.md`, `credentials.md`, `browser.md`.
+Baca dulu: `~/.claude/skills/_frontend-workflow-shared/rules.md`, `board.md`, `deploy-release.md`, `report-format.md`, `credentials.md`, `browser.md`.
 
 ```mermaid
 flowchart LR
@@ -52,4 +52,4 @@ Ringkasan:
 **Larangan:** agen tidak pernah merge PR rilis, push branch ke `upstream`, menimpa tag, deploy production tanpa "ya", atau memindah tiket ke Done.
 
 ## Berhenti lebih awal / galat
-`gh`/`glab`/Atlassian tidak terjangkau, branch project belum jelas → berhenti dan tanya. Regresi/smoke tidak bisa jalan → **Tertahan** + alasan di dokumen, bukan lulus. Deploy terhenti → lepas kunci `deploy:<env>` dan hapus worktree rilis sebelum lapor.
+`gh`/`glab`/platform tiket tidak terjangkau, branch project belum jelas → berhenti dan tanya. Regresi/smoke tidak bisa jalan → **Tertahan** + alasan di dokumen, bukan lulus. Deploy terhenti → lepas kunci `deploy:<env>` dan hapus worktree rilis sebelum lapor.

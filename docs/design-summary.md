@@ -20,19 +20,22 @@ Alur kanban; tim agen dan modelnya; mode Diawasi/Otonom dengan pagar aktif di ke
 | Berhenti dan bertanya | Upload build prod | Deploy ke production |
 | Pembersihan berkala | DerivedData, Gradle, APK/IPA | Laporan Playwright lama, cache build, `node_modules` worktree tiket nganggur, cache npm/pnpm/yarn |
 | Gate tambahan | — | Aksesibilitas dan tampilan responsif |
+| Platform tiket | Jira | Tidak ada default: ditanya per project (Jira, GitHub Projects/Issues, GitLab Issue Board, Linear, ...) |
 | Dokumen agen | Claude Docs | Markdown di `docs/` (default), Claude Docs bila dipilih |
 
 ## Keputusan implementasi (dibuat Claude, koreksi bila tidak cocok)
 | Keputusan | Alasan |
 |---|---|
 | 34 skill internal diimplementasikan sebagai skill terpisah; skill flow hanya berisi urutan + gerbang; `tests/skills_test.sh` memastikan skill internal tidak saling memanggil | Mengikuti "Skill set di tiap flow"; urutan kerja terlihat dari flow |
-| Nama folder bersama `_frontend-workflow-shared`, variabel `FRONTEND_WORKFLOW_DIR`, guard `guard-frontend.sh` | Tidak menimpa kit Mobile; state `~/.agent-workflow` (kunci, transisi Jira) tetap dipakai bersama |
+| Nama folder bersama `_frontend-workflow-shared`, variabel `FRONTEND_WORKFLOW_DIR`, guard `guard-frontend.sh` | Tidak menimpa kit Mobile; state `~/.agent-workflow` (kunci, `jira-transitions.json`) tetap dipakai bersama |
 | `install.sh` menolak bila nama perintah/agen sudah dipasang kit lain, kecuali `--force` | Nama perintah sama dengan Mobile; mencegah tertimpa diam-diam |
 | `repo-markdown` = worktree `<repo>-docs` di branch `agent-docs` milik `origin`, link = URL file di forge | Validasi terjadi sebelum ada branch tiket, worktree primary tidak boleh diedit, dan laporan butuh link untuk komentar tiket |
 | Planner menulis rencana ke file lokal; SPV yang menerbitkan (`/write-report`) | Planner tetap tanpa akses tulis ke luar, apa pun platform dokumentasinya |
 | `--batch`: satu build produksi + server preview lokal untuk QA (bukan dev server) | Setara "satu build untuk semua tiket" di Mobile, dan lebih dekat ke hasil deploy |
 | Deploy production setelah tag; hosting yang otomatis deploy dari `<primary>` dianggap deploy saat manusia merge | Agen tidak pernah merge PR rilis; izin tetap eksplisit |
 | Guard tidak memblokir deploy production di mode biasa (hanya di mode audit) | Sama dengan Mobile: upload prod = aturan berhenti-dan-tanya; penanda izin yang bisa dibuat agen sendiri tidak memberi keamanan nyata |
+| **Platform tiket tidak punya default** (memory = none → tanya user di awal; bingung → saran GitHub Projects untuk repo GitHub, GitLab Issue Board untuk repo GitLab). Operasi per platform di `board.md`, status di `board-status.json`, KODE selalu `<PREFIX>-<nomor>` | Rancangan hanya meminta `/setup-board` mencatat platform; tim tidak selalu memakai Jira |
+| Guard memblokir penutupan issue dan status di luar `board-status.json` untuk Jira, GitHub Projects, dan label; PR hanya `Refs #n` | Menutup issue = Done = hak manusia, di platform mana pun |
 | Port default 4100–4199, kunci `port:<n>` | Agen paralel tidak saling menimpa dev server |
 | Gerbang a11y = pelanggaran critical/serious **baru** di area tiket | Pelanggaran lama tidak memblokir tiket yang tidak menyentuhnya |
 | Matriks browser default Chromium desktop 1440×900, tablet 768×1024, ponsel 390×844 | Angka awal, ditanya sekali per project |

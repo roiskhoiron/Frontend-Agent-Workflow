@@ -1,6 +1,6 @@
 # Frontend-Agent-Workflow
 
-Tim agen AI (Claude Code) yang mengerjakan tiket Jira di proyek **frontend web**, dari cek tiket sampai siap direview:
+Tim agen AI (Claude Code) yang mengerjakan tiket di proyek **frontend web**, dari cek tiket sampai siap direview:
 
 ```mermaid
 flowchart LR
@@ -11,7 +11,7 @@ flowchart LR
   E -->|/branch-manager| F[Rilis + tag + production]
 ```
 
-Kamu cukup mengetik satu perintah. Agen membaca tiket, menulis kode beserta tesnya, menguji di browser (laptop, tablet, HP), membuat halaman pratinjau, membuka PR, lalu menulis komentar di Jira. Keputusan penting (deploy ke production, merge, tiket ke Done) **tetap di tanganmu**.
+Kamu cukup mengetik satu perintah. Agen membaca tiket, menulis kode beserta tesnya, menguji di browser (laptop, tablet, HP), membuat halaman pratinjau, membuka PR, lalu menulis komentar di tiket. Keputusan penting (deploy ke production, merge, tiket ke Done) **tetap di tanganmu**.
 
 Kit ini kembaran [kit Mobile](https://github.com/roiskhoiron/mobiledev-agent-workflow). Bedanya: device diganti browser, build aplikasi diganti deploy, Maestro diganti Playwright.
 
@@ -19,7 +19,9 @@ Kit ini kembaran [kit Mobile](https://github.com/roiskhoiron/mobiledev-agent-wor
 
 ## 1. Pasang (sekali per komputer)
 
-**Butuh:** [Claude Code](https://claude.com/claude-code), `git`, `jq`, `python3` + Pillow, Node.js + Playwright, `gh` (GitHub) atau `glab` (GitLab) yang sudah login, dan connector **Atlassian** (Jira) di Claude. Orca disarankan untuk kerja paralel.
+**Butuh:** [Claude Code](https://claude.com/claude-code), `git`, `jq`, `python3` + Pillow, Node.js + Playwright, `gh` (GitHub) atau `glab` (GitLab) yang sudah login. Orca disarankan untuk kerja paralel.
+
+**Platform tiket bebas:** Jira, GitHub (Issues/Projects), GitLab (Issue Board), Linear, atau lainnya. Tidak ada pilihan bawaan; agen menanyakannya di awal (lihat langkah 2). Pakai Jira atau Linear → sambungkan juga connector-nya di Claude.
 
 ```bash
 pip install pillow
@@ -39,14 +41,16 @@ bash tests/run.sh        # harus muncul: ALL PASS
    echo ".env.agent.local" >> .gitignore
    cp ~/path/Frontend-Agent-Workflow/templates/env.agent.local .env.agent.local
    ```
-2. Jalankan perintah pertamamu. Agen akan **bertanya sekali** lalu mengingatnya: status Jira yang dipakai, branch utama, hosting, server API, ukuran layar yang wajib diuji, dan tempat menyimpan laporan. Jawab saja; agen selalu memberi satu saran.
+2. Jalankan perintah pertamamu. Pertanyaan pertama agen: **"Tiket project ini dikelola di mana?"** Jawab Jira, GitHub, GitLab, Linear, atau lainnya. Belum punya papan tiket atau bingung? Agen menyarankan **GitHub Projects** (repo di GitHub) atau **GitLab Issue Board** (repo di GitLab) dan memberi langkah membuatnya.
+
+   Setelah itu agen **bertanya sekali** lalu mengingatnya: kolom/status papan yang dipakai, branch utama, hosting, server API, ukuran layar yang wajib diuji, dan tempat menyimpan laporan. Jawab saja; agen selalu memberi satu saran.
 3. Untuk kerja tim (beberapa agen sekaligus), buka Claude dengan `claude --teammate-mode auto`.
 
 ## 3. Pakai
 
 | Perintah | Kapan dipakai | Hasil |
 | --- | --- | --- |
-| `/validate-tiket KODE` | Tiket baru di Todo: layak dikerjakan? | Laporan + screenshot bertanda, komentar Jira, tiket ke In Progress bila layak |
+| `/validate-tiket KODE` | Tiket baru di Todo: layak dikerjakan? | Laporan + screenshot bertanda, komentar di tiket, tiket ke In Progress bila layak |
 | `/develop-tiket KODE` | Tiket In Progress: kerjakan | Kode + tes, laporan uji, link pratinjau, PR, tiket ke Ready To Review |
 | `/rilis-tiket KODE` | Ada feedback QA di tiket | Tiket kembali ke Todo, deploy ke staging, atau PR tiket di-merge (dengan izinmu) |
 | `/branch-manager --rilis KODE` | Mau rilis satu versi | Dokumen rilis, PR rilis, tag `vX.Y.Z`, deploy production (dengan izinmu) |
@@ -67,12 +71,13 @@ bash tests/run.sh        # harus muncul: ALL PASS
 | `--batch` (default) / `--separate` | Beberapa tiket diuji bersama sekali, atau tiap tiket jalan sendiri |
 | `--uat` | Setelah lulus uji, kamu mencoba sendiri halaman pratinjaunya |
 
-**Agen pasti berhenti dan bertanya sebelum:** deploy ke production, merge PR, memulai hotfix, atau bila akun uji tidak ada. Agen **tidak pernah** memindah tiket ke Done.
+**Agen pasti berhenti dan bertanya sebelum:** deploy ke production, merge PR, memulai hotfix, atau bila akun uji tidak ada. Agen **tidak pernah** memindah tiket ke Done atau menutup issue.
 
 ## 4. Istilah singkat
 
 | Istilah | Artinya |
 | --- | --- |
+| **KODE** | Nomor tiket, mis. `WEB-123` (Jira) atau `#123` dari GitHub/GitLab (agen menulisnya `WEB-123`) |
 | **AC / TC** | Syarat selesai di tiket / langkah uji. Hasil uji: Lulus, Gagal, atau Tertahan (dengan alasan) |
 | **Halaman pratinjau** | Salinan situs dari perubahan tiket, bisa dibuka siapa saja untuk dicoba |
 | **Worktree tiket** | Folder kerja khusus satu tiket (`<repo>-<nomor>`), supaya beberapa tiket bisa dikerjakan bersamaan |
@@ -86,7 +91,7 @@ bash tests/run.sh        # harus muncul: ALL PASS
 | --- | --- |
 | `DIBLOKIR oleh guard: ...` | Wajar, itu pagar bekerja. Baca pesannya; biasanya menyebut cara yang benar |
 | `Jalankan dari workspace domain` | Buka workspace kerja di Orca (bukan root project), ulangi perintah |
-| `belum punya daftar transisi` | Pilih status Jira yang ditunjukkan agen (Todo, In Progress, Ready To Review) |
+| `belum punya daftar status` | Pilih kolom/status papan yang ditunjukkan agen untuk Todo, In Progress, Ready To Review |
 | `Teammate mode mati` | Buka ulang Claude dengan `claude --teammate-mode auto` |
 
 Lainnya: [docs/masalah-umum.md](docs/masalah-umum.md).

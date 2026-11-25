@@ -1,11 +1,11 @@
 ---
 name: validate-tiket
-description: Validasi tiket Jira frontend web sebelum dikerjakan (cek layak, reproduksi bug di browser, screenshot bertanda, laporan, komentar keputusan), solo atau tim (PdM, Product Designer, Contract Runner, HoE, PjM, Spesialis eskalasi). Dipanggil lewat `/validate-tiket KODE... [--solo|--tim]`. Use when asked to validate, check feasibility, or reproduce a Jira ticket for the web frontend; kata kunci - validasi tiket, cek tiket, reproduksi bug, layak dikerjakan.
+description: Validasi tiket frontend web sebelum dikerjakan (cek layak, reproduksi bug di browser, screenshot bertanda, laporan, komentar keputusan), solo atau tim (PdM, Product Designer, Contract Runner, HoE, PjM, Spesialis eskalasi). Dipanggil lewat `/validate-tiket KODE... [--solo|--tim]`. Use when asked to validate, check feasibility, or reproduce a ticket (Jira, GitHub, GitLab, ...) for the web frontend; kata kunci - validasi tiket, cek tiket, reproduksi bug, layak dikerjakan.
 argument-hint: KODE-TIKET... [--solo|--tim]
 ---
 Validasi tiket di `$ARGUMENTS`. Peranmu = **Validator**; di mode tim kamu juga **SPV**. Tidak menulis kode produk, tidak memindah tiket ke Done.
 
-Baca dulu (jangan disalin): `~/.claude/skills/_frontend-workflow-shared/rules.md`, `browser.md`, `credentials.md`, `report-format.md`, dan `~/.claude/agents/validator.md`; mode tim juga `~/.claude/agents/{pdm,product-designer,contract-runner,hoe,pjm,eskalasi}.md`. Skrip: `$FRONTEND_WORKFLOW_DIR/bin/<skrip>` (export seperti di `rules.md`); `lock.sh`/`port-pick.sh` selalu diawali `AGENT_LOCK_PID=$PPID` di panggilan Bash yang sama.
+Baca dulu (jangan disalin): `~/.claude/skills/_frontend-workflow-shared/rules.md`, `board.md`, `browser.md`, `credentials.md`, `report-format.md`, dan `~/.claude/agents/validator.md`; mode tim juga `~/.claude/agents/{pdm,product-designer,contract-runner,hoe,pjm,eskalasi}.md`. Skrip: `$FRONTEND_WORKFLOW_DIR/bin/<skrip>` (export seperti di `rules.md`); `lock.sh`/`port-pick.sh` selalu diawali `AGENT_LOCK_PID=$PPID` di panggilan Bash yang sama.
 
 Sesi ini bertindak langsung sebagai Validator/SPV (bukan subagen), supaya akses tiket dan dokumen ada di satu tempat. Tiket berurutan.
 - `--solo` (atau tanpa flag untuk tiket kecil/jelas): semua langkah sendiri.
@@ -23,7 +23,7 @@ flowchart LR
 ## Langkah
 | # | Skill internal | Catatan |
 |---|---|---|
-| 1 | `/setup-board` | sekali per sesi; gagal → berhenti |
+| 1 | `/setup-board` | sekali per sesi; platform tiket belum tercatat → **tanya user dulu** (`board.md`); gagal → berhenti |
 | 2 | `/setup-docs` | sekali per sesi |
 | 3 | `/read-ticket` | per tiket; jejak ada → **validasi ulang** (lihat bawah) |
 | 4 | `/sync-docs` | sekali per sesi; ref masuk laporan |

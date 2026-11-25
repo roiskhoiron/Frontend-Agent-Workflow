@@ -32,6 +32,7 @@ run 0 $N mcp__Atlassian_MCP__executeWrite '{"name":"addWorklog","cloudId":"c","i
 run 2 $A mcp__Atlassian_MCP__executeWrite '{"name":"addWorklog","cloudId":"c","inputs":{}}'
 run 2 $A mcp__Atlassian_MCP__executeDestructive '{"name":"deleteIssue","cloudId":"c","inputs":{}}'
 run 0 $A mcp__Atlassian_MCP__executeRead '{"name":"getIssue","cloudId":"c","inputs":{}}'
-# other MCP servers are not touched
-run 0 $A mcp__github__create_pull_request '{}'
+# GitHub MCP writes are audit-blocked too (guard_board_test.sh); unrelated MCP servers are not touched
+run 2 $A mcp__github__create_pull_request '{}'
+run 0 $A mcp__Claude_Docs__batch '{}'
 exit $FAILS

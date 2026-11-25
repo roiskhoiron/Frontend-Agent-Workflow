@@ -39,7 +39,7 @@ Agen merge PR tiket ke `<protected>` hanya bila **semua** syarat lolos dan user 
 
 | Syarat | Cara cek |
 |---|---|
-| Tiket Done dan punya PR/MR | Jira + `gh pr list` / `glab mr list` |
+| Tiket Done dan punya PR/MR | platform tiket (`board.md`) + `gh pr list` / `glab mr list` |
 | PR/MR approved | `gh pr view --json reviewDecision` / `glab mr view` |
 | CI hijau | status check PR/MR |
 | Isi diff sesuai tiket | diff vs AC; `manifest-check.sh <base> <head> KODE...` |

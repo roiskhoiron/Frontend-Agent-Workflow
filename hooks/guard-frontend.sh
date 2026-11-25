@@ -3,8 +3,10 @@
 # Named guard-frontend.sh so it can sit next to the mobile kit's guard.sh.
 # Blocks: push outside origin, force/delete of protected branches, worktrees outside the
 # checkout's siblings, new Orca projects/tabs, rm -r outside the project (web build artifacts
-# excepted), edits in the primary worktree, Jira transitions not in jira-transitions.json, and
-# every write while read-only audit mode (/audit-issue) is on (incl. deploys/publishes).
+# excepted), edits in the primary worktree, ticket status changes not allowed by board-status.json
+# (Jira transition ids, GitHub Projects status options, status labels on GitHub/GitLab issues),
+# closing issues (= Done, humans only), and every write while read-only audit mode (/audit-issue)
+# is on (incl. deploys/publishes and writes to the ticket platform).
 # stdin = hook JSON. exit 0 = allow, exit 2 + stderr = block.
 # One check_<tool> function per tool; unknown tools and unparseable input are allowed.
 PATH="$PATH:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
@@ -109,7 +111,7 @@ check_git() {
   done
 }
 
-audit_block() { block "$1 dilarang: mode audit hanya-baca (/audit-issue). Catat temuan di laporan, jangan ubah repo/Jira."; }
+audit_block() { block "$1 dilarang: mode audit hanya-baca (/audit-issue). Catat temuan di laporan, jangan ubah repo/tiket."; }
 
 # audit mode: only read-only git subcommands; branch/tag only list, never create/delete
 check_git_audit() {
@@ -310,6 +312,75 @@ check_deploy() { # tool args...
   return 0
 }
 
+# --- ticket platform (skills/_shared/board.md) -------------------------------------------------
+# ${AGENT_WORKFLOW_STATE:-~/.agent-workflow}/board-status.json, one entry per board key (KODE prefix):
+#   jira:            {"platform":"jira","allow":["21","31"],"names":{...}}             transition ids
+#   github-project:  {"platform":"github-project","project":"PVT_x","allow":["opt"]}     status option ids
+#   label boards:    {"platform":"gitlab-board"|"github-labels","label_prefix":"status::","allow":["status::review"]}
+# Done is never in allow. Jira also falls back to jira-transitions.json (shared with the mobile kit).
+BOARD_CFG() { echo "${AGENT_WORKFLOW_STATE:-$HOME/.agent-workflow}/board-status.json"; }
+board_need() { "$JQ" -e type "$(BOARD_CFG)" >/dev/null 2>&1 || block "daftar status papan tiket belum ada ($(BOARD_CFG)). Jalankan /setup-board (board.md → Setup status papan)."; }
+
+# status labels: a label is a status label when it starts with a label_prefix of a label board
+# (default "status::" / "status:" when no label board is configured yet)
+check_status_labels() { # label...
+  local cfg l p prefixes
+  cfg=$(BOARD_CFG)
+  prefixes=$("$JQ" -r '[.[]? | select(.platform=="gitlab-board" or .platform=="github-labels") | .label_prefix // "status::"] | unique | .[]' "$cfg" 2>/dev/null)
+  for l; do
+    [ -n "$l" ] || continue
+    if [ -z "$prefixes" ]; then
+      case $(printf '%s' "$l" | tr '[:upper:]' '[:lower:]') in status:*|status/*) board_need; block "label status '$l' belum punya daftar status. Jalankan /setup-board.";; esac
+      continue
+    fi
+    while IFS= read -r p; do
+      case $l in "$p"*)
+        "$JQ" -e --arg l "$l" 'any(.[]?; (.platform=="gitlab-board" or .platform=="github-labels") and ((.allow // []) | index($l) != null))' "$cfg" >/dev/null 2>&1 ||
+          block "label status '$l' tidak diizinkan. Done hanya dipindah manusia; pakai label status yang ada di daftar allow (board-status.json)."
+        break;;
+      esac
+    done <<< "$prefixes"
+  done
+  return 0
+}
+
+# gh/glab writes on the ticket board: closing an issue = Done (humans only); status changes only to allowed values
+check_board_cli() { # tool args...
+  local t=$1 pid='' opt='' labels=() a l
+  shift
+  case "$t ${1:-} ${2:-}" in
+    'gh issue close'|'glab issue close') block "$t issue close dilarang: menutup issue = Done, hanya manusia. Geser status ke Ready To Review saja.";;
+    'gh issue delete'|'glab issue delete') block "$t issue delete dilarang.";;
+    'gh project item-archive'|'gh project item-delete'|'gh project delete'|'gh project close') block "gh project $2 dilarang: agen hanya menggeser status item lewat item-edit.";;
+  esac
+  shift 2 2>/dev/null || return 0
+  while [ $# -gt 0 ]; do
+    case $1 in
+      --project-id) pid=${2:-}; shift;;
+      --project-id=*) pid=${1#*=};;
+      --single-select-option-id) opt=${2:-}; shift;;
+      --single-select-option-id=*) opt=${1#*=};;
+      --label|-l|--add-label) labels+=("${2:-}"); shift;;
+      --label=*|--add-label=*) labels+=("${1#*=}");;
+    esac
+    shift
+  done
+  if [ "$t ${SUB:-}" = "gh project item-edit" ] && [ -n "$opt" ]; then
+    board_need
+    "$JQ" -e --arg p "$pid" 'any(.[]?; .platform=="github-project" and .project==$p)' "$(BOARD_CFG)" >/dev/null 2>&1 ||
+      block "project GitHub '$pid' belum punya daftar status. Jalankan /setup-board."
+    "$JQ" -e --arg p "$pid" --arg o "$opt" 'any(.[]?; .platform=="github-project" and .project==$p and ((.allow // []) | index($o) != null))' "$(BOARD_CFG)" >/dev/null 2>&1 ||
+      block "status '$opt' di project GitHub '$pid' tidak diizinkan. Done hanya dipindah manusia; pakai status di daftar allow."
+  fi
+  case "$t ${SUB:-}" in
+    'glab issue update'|'gh issue edit')
+      for a in ${labels[@]+"${labels[@]}"}; do
+        while IFS= read -r l; do check_status_labels "$l"; done < <(printf '%s\n' "$a" | tr ',' '\n')
+      done;;
+  esac
+  return 0
+}
+
 check_Bash() {
   local segs w i c t prev gsub
   [ -n "$PY" ] || block "python3 tidak ditemukan, guard tidak bisa memeriksa perintah Bash."
@@ -329,7 +400,11 @@ check_Bash() {
           esac;;
         git) GSUB_OFF=-1; check_git "${w[@]:$((i+1))}"; gsub=$((i + 1 + GSUB_OFF));;
         orca) check_orca "${w[@]:$((i+1))}";;
-        glab) [ -n "$AUDIT" ] && check_forge "${w[@]:$((i+1))}";;
+        glab) [ -n "$AUDIT" ] && check_forge "${w[@]:$((i+1))}"
+              SUB="${w[$((i+1))]:-} ${w[$((i+2))]:-}"; check_board_cli glab "${w[@]:$((i+1))}";;
+        gh) # gh stays allowed in audit mode except writes on the ticket board (issues, projects, api writes)
+            [ -n "$AUDIT" ] && case ${w[$((i+1))]:-} in issue|project|api) check_forge "${w[@]:$((i+1))}";; esac
+            SUB="${w[$((i+1))]:-} ${w[$((i+2))]:-}"; check_board_cli gh "${w[@]:$((i+1))}";;
         rm) [ $i -eq $gsub ] || check_rm "${w[@]:$((i+1))}";;
         vercel|netlify|firebase|wrangler|npm|pnpm|yarn) [ -n "$AUDIT" ] && check_deploy "$c" "${w[@]:$((i+1))}";;
       esac
@@ -364,15 +439,31 @@ check_edit() {
 
 # transitionJiraIssue (or an executor call naming a transition): only transition ids allowed for the project in ${AGENT_WORKFLOW_STATE:-~/.agent-workflow}/jira-transitions.json
 check_jira() {
-  local cfg=${AGENT_WORKFLOW_STATE:-$HOME/.agent-workflow}/jira-transitions.json
-  local key id proj
+  local cfg key id proj
   key=$(printf '%s' "$input" | "$JQ" -r '.tool_input.issueIdOrKey // .tool_input.inputs.issueIdOrKey // empty' 2>/dev/null)
   id=$(printf '%s' "$input" | "$JQ" -r '.tool_input.transition.id // .tool_input.inputs.transition.id // empty' 2>/dev/null)
   proj=$(printf '%s' "$key" | sed -E 's/-[0-9]+$//')
-  "$JQ" -e type "$cfg" >/dev/null 2>&1 || block "config transisi Jira tidak ada/rusak ($cfg). Minta user: jalankan setup transisi."
-  "$JQ" -e --arg p "$proj" 'has($p)' "$cfg" >/dev/null 2>&1 || block "project '$proj' belum punya daftar transisi. Minta user: jalankan setup transisi."
+  cfg=$(BOARD_CFG)
+  if ! "$JQ" -e --arg p "$proj" '.[$p] | select(.platform == null or .platform == "jira")' "$cfg" >/dev/null 2>&1; then
+    cfg=${AGENT_WORKFLOW_STATE:-$HOME/.agent-workflow}/jira-transitions.json   # mobile kit's file
+    "$JQ" -e --arg p "$proj" 'has($p)' "$cfg" >/dev/null 2>&1 || block "project Jira '$proj' belum punya daftar status. Jalankan /setup-board (board.md → Setup status papan)."
+  fi
   "$JQ" -e --arg p "$proj" --arg i "$id" '.[$p].allow // [] | map(tostring) | index($i) != null' "$cfg" >/dev/null 2>&1 ||
-    block "transisi id '$id' untuk $proj tidak diizinkan. Done hanya dipindah kolega; pindahkan hanya ke status yang ada di daftar allow."
+    block "transisi id '$id' untuk $proj tidak diizinkan. Done hanya dipindah manusia; pindahkan hanya ke status yang ada di daftar allow."
+}
+
+# GitHub/GitLab MCP: closing an issue = Done (humans only); audit mode blocks every write
+check_forge_mcp() {
+  local verb st
+  verb=$(printf '%s' "${tool##*__}" | tr '[:upper:]' '[:lower:]')
+  if [ -n "$AUDIT" ]; then
+    case $verb in get*|list*|search*|read*|*_read) ;; *) audit_block "$tool";; esac
+  fi
+  st=$(printf '%s' "$input" | "$JQ" -r '.tool_input.state // .tool_input.state_event // empty' 2>/dev/null | tr '[:upper:]' '[:lower:]')
+  case $verb in *issue*)
+    case $st in closed|close) block "$tool dengan state '$st' dilarang: menutup issue = Done, hanya manusia.";; esac;;
+  esac
+  return 0
 }
 
 input=$(cat)
@@ -425,5 +516,6 @@ case $tool in
         case $op in *transition*) check_jira;; esac;;
       esac
     fi;;
+  mcp__*[Gg]it[Hh]ub*__*|mcp__*[Gg]it[Ll]ab*__*) check_forge_mcp;;
 esac
 exit 0

@@ -9,7 +9,7 @@ Audit PR/MR `$ARGUMENTS` (baca saja). Baca: `deploy-release.md` (Merge PR tiket,
 1. Syarat:
    | Syarat | Cara cek |
    |---|---|
-   | Tiket Done + punya PR/MR | `getJiraIssue`, `gh pr view <n> --repo <upstream>` |
+   | Tiket Done + punya PR/MR | operasi **Baca tiket** (`board.md`), `gh pr view <n> --repo <upstream>` |
    | Approved | `gh pr view <n> --json reviewDecision` / `glab mr view <n>` |
    | CI hijau | `gh pr checks <n>` / status pipeline MR |
    | Diff sesuai tiket | baca diff vs AC; `"$FRONTEND_WORKFLOW_DIR/bin/manifest-check.sh" <base> <head> <KODE>` |

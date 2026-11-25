@@ -8,7 +8,7 @@ Komentar ringkasan untuk `$ARGUMENTS`. Baca: `report-format.md` (Komentar tiket)
 ## Langkah
 1. Pastikan link laporan ada dan bisa dibuka; tidak ada → berhenti (jangan komentar tanpa link).
 2. Susun komentar: sapaan ke reviewer/assignee, **baris pertama link laporan**, lalu apa yang dikerjakan dalam bahasa awam, hasil uji (laptop/tablet/HP; yang tertahan + alasan sederhana), link halaman pratinjau beserta server datanya (mis. "pakai data server uji"), link rencana dan PR/MR.
-3. Kirim dengan `addCommentToJiraIssue`.
+3. Kirim dengan operasi **Komentar** (`board.md`).
 
 ## Keluaran
 Link komentar.

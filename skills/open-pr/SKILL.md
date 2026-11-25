@@ -8,7 +8,7 @@ PR/MR untuk `$ARGUMENTS`. Baca: `deploy-release.md` (PR/MR), `rules.md` (Git).
 ## Mode `draft` (tiket tanpa jejak, sebelum Coder mulai)
 1. Branch belum beda dari base → `git -C <worktree> commit --allow-empty -m "chore: <KODE> mulai pengerjaan"`.
 2. `git -C <worktree> push -u origin <branch tiket>`.
-3. `gh pr create --repo <upstream> --base <protected> --head <fork>:<branch> --draft --title "<KODE>: <judul>" --body-file <body>` / `glab mr create --draft ...`. Isi body: link rencana, Acuan tiket, Matriks env. Host dari `git remote get-url upstream`.
+3. `gh pr create --repo <upstream> --base <protected> --head <fork>:<branch> --draft --title "<KODE>: <judul>" --body-file <body>` / `glab mr create --draft ...`. Isi body: link rencana, Acuan tiket, Matriks env, dan rujukan tiket (`Refs #<n>` untuk GitHub/GitLab Issues, atau link tiket); **tidak pernah** `Closes/Fixes #<n>` (menutup issue = Done, hak manusia; `board.md`). Host dari `git remote get-url upstream`.
 
 ## Mode `revisi` (tiket dengan jejak, PR/MR belum merged)
 `gh pr ready <n> --undo` / `glab mr update <n> --draft`; tidak membuat PR/MR baru.
