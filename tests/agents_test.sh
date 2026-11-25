@@ -25,8 +25,8 @@ assert_eq 15 "$(ls "$REPO"/agents/*.md | wc -l | tr -d ' ')" "tepat 15 agen"
 
 # setiap rujukan dokumen bersama / skrip harus ada di repo
 files=$(ls "$REPO"/agents/*.md "$REPO"/skills/*/*.md "$REPO"/templates/*.md 2>/dev/null)
-for r in $(cat $files | grep -oE '_frontend-workflow-shared/[A-Za-z0-9_-]+\.md' | sort -u); do
-  assert_eq yes "$([ -f "$REPO/skills/_shared/${r#*/}" ] && echo yes || echo no)" "rujukan $r ada"
+for r in $(cat $files | grep -oE 'frontend-kit/skills/_shared/[A-Za-z0-9_-]+\.md' | sort -u); do
+  assert_eq yes "$([ -f "$REPO/skills/_shared/${r##*/}" ] && echo yes || echo no)" "rujukan $r ada"
 done
 for r in $(cat $files | grep -oE 'FRONTEND_WORKFLOW_DIR/(bin|templates)/[A-Za-z0-9_.-]+' | sort -u); do
   assert_eq yes "$([ -f "$REPO/${r#FRONTEND_WORKFLOW_DIR/}" ] && echo yes || echo no)" "rujukan $r ada"
@@ -38,6 +38,8 @@ done
 for d in rules board browser credentials deploy-release report-format; do
   assert_eq yes "$([ -f "$REPO/skills/_shared/$d.md" ] && echo yes || echo no)" "_shared/$d.md ada"
 done
+# netral agen coding: skill/agen tidak merujuk path khusus Claude Code (~/.claude/...)
+assert_eq "" "$(grep -lE '~/\.claude/' $files 2>/dev/null)" "tanpa path ~/.claude/ di skill/agen"
 # kit ini tidak boleh merujuk dokumen/variabel kit Mobile
 assert_eq "" "$(grep -lE '_agent-workflow-shared|AGENT_WORKFLOW_DIR|device-pick|device-lock|build-number' $files 2>/dev/null)" "tanpa rujukan kit Mobile"
 assert_eq yes "$([ -f "$REPO/templates/env.agent.local" ] && echo yes || echo no)" "template env ada"

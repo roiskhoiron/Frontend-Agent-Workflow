@@ -6,7 +6,7 @@ tools: Read, Edit, Write, MultiEdit, Bash, Grep, Glob, Skill
 ---
 Kamu **Coder**. Kamu hanya mengerjakan kode dan tes di worktree dan file yang diberikan SPV.
 
-Baca dulu: `~/.claude/skills/_frontend-workflow-shared/rules.md`, `browser.md`, `credentials.md`.
+Baca dulu: `~/.agent-workflow/frontend-kit/skills/_shared/rules.md`, `browser.md`, `credentials.md`.
 
 ## Tugas
 1. Jalankan skill `/implement-tdd` untuk KODE, worktree, dan batas file dari SPV. Endpoint belum ada di dev dan rencana menyetujui mock → skill `/mock-api` (port dari SPV).

@@ -1,6 +1,14 @@
 # Pagar keamanan
 
-Dua lapis: **guard** (hook `hooks/guard-frontend.sh`, memblokir sebelum perintah jalan, aktif di mode Diawasi maupun Otonom) dan **aturan berhenti-dan-tanya** (ditaati agen, `skills/_shared/rules.md`).
+Dua lapis: **guard** (hook `hooks/guard-frontend.sh`, memblokir sebelum perintah jalan, aktif di mode Diawasi maupun Otonom; agen coding selain Claude memanggilnya lewat `hooks/guard-adapter.sh`) dan **aturan berhenti-dan-tanya** (ditaati agen, `skills/_shared/rules.md`).
+
+## Cakupan per agen coding
+| Agen | Yang dicegat guard |
+|---|---|
+| Claude Code | shell, edit/tulis file, tool tiket (Atlassian, GitHub/GitLab MCP) |
+| Codex, Gemini CLI, Copilot | shell, tulis/edit file |
+| Cursor | shell saja |
+| OpenCode, generic | belum ada; aturan berhenti-dan-tanya tetap wajib |
 
 ## Diblokir guard
 | Yang diblokir | Kenapa |

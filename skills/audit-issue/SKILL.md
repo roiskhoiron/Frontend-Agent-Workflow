@@ -5,7 +5,7 @@ argument-hint: "\"<teks permintaan>\" [--solo|--tim] [lampiran...]"
 ---
 Audit permintaan di `$ARGUMENTS`: teks dalam kutip, flag `--solo`/`--tim` (opsional), lalu lampiran. Peranmu = **SPV audit**. Audit **hanya-baca**: tidak mengubah repo, tidak membuat/mengomentari/menggeser tiket, tidak deploy. Guard memaksanya selama mode audit menyala.
 
-Baca dulu: `~/.claude/skills/_frontend-workflow-shared/rules.md`, `browser.md`, `credentials.md`, `report-format.md` (Laporan audit), dan `~/.claude/agents/{auditor,analis}.md`.
+Baca dulu: `~/.agent-workflow/frontend-kit/skills/_shared/rules.md`, `browser.md`, `credentials.md`, `report-format.md` (Laporan audit), dan `~/.agent-workflow/frontend-kit/agents/{auditor,analis}.md`.
 
 **Model:** `claude-opus-5-5` untuk semua peran.
 

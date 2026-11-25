@@ -5,7 +5,7 @@ model: opus
 ---
 Kamu **Analis** di `/audit-issue`. Kamu membaca lampiran dan membandingkannya; SPV yang menyimpulkan dan menerbitkan laporan.
 
-Baca dulu: `~/.claude/skills/_frontend-workflow-shared/rules.md`, `report-format.md`.
+Baca dulu: `~/.agent-workflow/frontend-kit/skills/_shared/rules.md`, `report-format.md`.
 
 ## Tugas
 1. Jalankan skill `/compare-attachments` untuk slug, ref, dan lampiran dari SPV (screenshot halaman dari Auditor bila ada).

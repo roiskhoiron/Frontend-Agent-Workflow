@@ -3,7 +3,7 @@ name: reproduce-browser
 description: Skill internal workflow Frontend. Mereproduksi bug atau memeriksa perilaku halaman di browser (Playwright) pada ukuran layar dari tiket/matriks, dengan screenshot bertanda dari posisi elemen. Menggantikan /reproduce-device di Mobile. Dipakai /validate-tiket dan /audit-issue.
 argument-hint: KODE-atau-slug
 ---
-Reproduksi di browser untuk `$ARGUMENTS`. Baca: `browser.md`, `credentials.md`, `report-format.md` di `~/.claude/skills/_frontend-workflow-shared/`.
+Reproduksi di browser untuk `$ARGUMENTS`. Baca: `browser.md`, `credentials.md`, `report-format.md` di `~/.agent-workflow/frontend-kit/skills/_shared/`.
 
 ## Langkah
 1. **Versi/URL:** yang tertulis di tiket/permintaan. Kosong → URL staging dari memory project; tidak ada staging → server lokal dari ref `upstream/<protected>` di worktree yang ditugaskan (port dari `port-pick.sh`). Catat URL + hash commit (lokal) atau versi yang tampil.

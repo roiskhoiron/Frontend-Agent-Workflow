@@ -5,7 +5,7 @@ argument-hint: KODE-TIKET... [--solo|--tim]
 ---
 Validasi tiket di `$ARGUMENTS`. Peranmu = **Validator**; di mode tim kamu juga **SPV**. Tidak menulis kode produk, tidak memindah tiket ke Done.
 
-Baca dulu (jangan disalin): `~/.claude/skills/_frontend-workflow-shared/rules.md`, `board.md`, `browser.md`, `credentials.md`, `report-format.md`, dan `~/.claude/agents/validator.md`; mode tim juga `~/.claude/agents/{pdm,product-designer,contract-runner,hoe,pjm,eskalasi}.md`. Skrip: `$FRONTEND_WORKFLOW_DIR/bin/<skrip>` (export seperti di `rules.md`); `lock.sh`/`port-pick.sh` selalu diawali `AGENT_LOCK_PID=$PPID` di panggilan Bash yang sama.
+Baca dulu (jangan disalin): `~/.agent-workflow/frontend-kit/skills/_shared/rules.md`, `board.md`, `browser.md`, `credentials.md`, `report-format.md`, dan `~/.agent-workflow/frontend-kit/agents/validator.md`; mode tim juga `~/.agent-workflow/frontend-kit/agents/{pdm,product-designer,contract-runner,hoe,pjm,eskalasi}.md`. Skrip: `$FRONTEND_WORKFLOW_DIR/bin/<skrip>` (export seperti di `rules.md`); `lock.sh`/`port-pick.sh` selalu diawali `AGENT_LOCK_PID=$PPID` di panggilan Bash yang sama.
 
 Sesi ini bertindak langsung sebagai Validator/SPV (bukan subagen), supaya akses tiket dan dokumen ada di satu tempat. Tiket berurutan.
 - `--solo` (atau tanpa flag untuk tiket kecil/jelas): semua langkah sendiri.
@@ -57,7 +57,7 @@ Teammate paralel (tool Agent, `name` dari "Nama agen" di `rules.md`, `subagent_t
 | PjM | `claude-sonnet-5-5` | `/find-related` |
 | Spesialis eskalasi | fable (jangan isi `model`) | hanya saat pemicu |
 
-Brief: KODE, ringkasan tiket + AC, lokasi dokumen + ref, URL/versi, port + akun (bug), folder `${TMPDIR:-/tmp}/validate/<KODE>/`. Prompt: "Ikuti `~/.claude/agents/<peran>.md`".
+Brief: KODE, ringkasan tiket + AC, lokasi dokumen + ref, URL/versi, port + akun (bug), folder `${TMPDIR:-/tmp}/validate/<KODE>/`. Prompt: "Ikuti `~/.agent-workflow/frontend-kit/agents/<peran>.md`".
 - Product Designer gagal mereproduksi bug UI setelah satu putaran → panggil ulang dengan `model: claude-opus-5-5`.
 - **Spesialis eskalasi** hanya bila: bug logika gagal direproduksi HoE setelah satu putaran; temuan HoE ambigu; tiket high-risk (pembayaran, autentikasi, data pribadi); konflik antar-agen. Sebut pemicunya di brief.
 - Gabungkan `${TMPDIR:-/tmp}/validate/<KODE>/*.md` jadi satu laporan (bagian Bisnis / Desain / Teknis / Ketergantungan). Pantau teammate sampai tuntas, hentikan yang tugasnya habis (`rules.md` → Orkestrasi).

@@ -3,9 +3,9 @@ name: branch-manager
 description: Rilis per versi frontend web dari branch integrasi ke branch produksi - tracing commit ke tiket/PR/programmer, regresi penuh di staging, dokumen rilis, PR rilis, tag setelah PR rilis di-merge manusia, deploy production dengan izin, smoke live. Dipanggil lewat `/branch-manager --rilis KODE-TIKET`. Use when asked to prepare a production release, release notes, or a release PR for the web frontend; kata kunci - rilis versi, branch manager, release notes, PR rilis, tag versi.
 argument-hint: --rilis KODE-TIKET
 ---
-Siapkan rilis satu versi (`$ARGUMENTS`; `KODE-TIKET` = tiket tempat dokumen rilis dikomentari). Sesi ini = **Release (Agen First)**: ikuti `~/.claude/agents/release.md`. Agen mengerjakan semua langkah dulu, lalu bertanya: **Konfirmasi / Tolak / Ikuti rekomendasi agen**. Argumen selain `--rilis KODE` (mis. `--hotfix`) → belum ada, berhenti dan tanya.
+Siapkan rilis satu versi (`$ARGUMENTS`; `KODE-TIKET` = tiket tempat dokumen rilis dikomentari). Sesi ini = **Release (Agen First)**: ikuti `~/.agent-workflow/frontend-kit/agents/release.md`. Agen mengerjakan semua langkah dulu, lalu bertanya: **Konfirmasi / Tolak / Ikuti rekomendasi agen**. Argumen selain `--rilis KODE` (mis. `--hotfix`) → belum ada, berhenti dan tanya.
 
-Baca dulu: `~/.claude/skills/_frontend-workflow-shared/rules.md`, `board.md`, `deploy-release.md`, `report-format.md`, `credentials.md`, `browser.md`.
+Baca dulu: `~/.agent-workflow/frontend-kit/skills/_shared/rules.md`, `board.md`, `deploy-release.md`, `report-format.md`, `credentials.md`, `browser.md`.
 
 ```mermaid
 flowchart LR

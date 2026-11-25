@@ -16,7 +16,7 @@ User belum punya atau bingung → sarankan **satu** alternatif yang paling dekat
 
 Agen **tidak membuat** board/project baru sendiri; bila user setuju memakai saran itu, berikan langkah singkat untuk membuatnya, lalu tunggu.
 
-Jawaban disimpan sebagai memory project tipe `reference`:
+Jawaban disimpan di memory project (`rules.md` → Lokasi):
 | Kunci | Contoh |
 |---|---|
 | Platform | `jira` · `github-project` · `github-labels` · `gitlab-board` · `linear` · lainnya |

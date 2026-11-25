@@ -4,7 +4,9 @@
 | --- | --- |
 | "DIBLOKIR oleh guard: ..." | Perintah melanggar pagar. Baca pesannya; biasanya menyebut cara yang benar |
 | `install.sh`: "Tidak dipasang: nama skill/agen ini sudah dipakai kit lain" | Kit Mobile (atau lainnya) sudah memasang perintah/agen dengan nama sama. Pilih satu kit per mesin, atau `./install.sh --force` |
-| "Teammate mode mati" | Buka ulang Claude dengan `claude --teammate-mode auto`, lalu ulangi perintah |
+| "Teammate mode mati" (Claude Code) | Buka ulang dengan `claude --teammate-mode auto`, lalu ulangi perintah |
+| Pagar tidak jalan di Codex / Gemini CLI | Hook scope project baru aktif setelah project di-*trust* di agen itu. Cek dengan perintah yang pasti ditolak: `git push upstream main` |
+| Skill tidak muncul di agen non-Claude | Pastikan agen membaca `~/.agents/skills` atau `<project>/.agents/skills`; tanpa fitur skill, minta agen membaca `~/.agent-workflow/frontend-kit/skills/<perintah>/SKILL.md` |
 | "Jalankan dari workspace domain" | `/develop-tiket` dijalankan dari root project. Buka workspace domain di Orca |
 | Agen bertanya "tiket dikelola di mana?" | Project belum punya catatan platform tiket. Jawab Jira / GitHub / GitLab / Linear; belum punya → terima saran agen (GitHub Projects atau GitLab Issue Board) |
 | "belum punya daftar status" | Agen menunjukkan status di papanmu; pilih untuk Todo, In Progress, Ready To Review (Done tidak pernah) |

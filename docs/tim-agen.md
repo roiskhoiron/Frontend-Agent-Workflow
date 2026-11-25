@@ -20,9 +20,10 @@ Dua kelompok, sama dengan Mobile. **Management** memutuskan dan berbicara ke lua
 | Auditor | Cecep, Dadang, Sarip | Opus | Kode, log, reproduksi | `/audit-issue` |
 | Analis | Bu Lastri | Opus | Lampiran vs kode vs halaman | `/audit-issue` |
 
-- Agen tambahan selalu **teammate** Claude Code: tampil sebagai panel split di tab SPV dengan label `@<Nama>-<Label><n>` (mis. `@Paijo-QA1`). Butuh teammate mode (`claude --teammate-mode auto`).
+- Claude Code: agen tambahan selalu **teammate**: tampil sebagai panel split di tab SPV dengan label `@<Nama>-<Label><n>` (mis. `@Paijo-QA1`). Butuh teammate mode (`claude --teammate-mode auto`).
 - Tiap peran menjalankan skill internal yang disebut di tugasnya (mis. Coder → `/implement-tdd`, QA → `/test-browser` + `/check-a11y`, Reviewer → `/review-code`).
-- Model diubah di `~/.claude/agents/<peran>.md` (symlink ke `agents/` di repo ini).
+- Agen coding lain: peran yang sama dijalankan sebagai subagent bawaan agen itu (brief dari file peran `agents/<peran>.md`); tanpa subagent → satu agen menjalankan semua peran berurutan (mode solo). Model per peran hanya berlaku di Claude Code.
+- Model diubah di `~/.agent-workflow/frontend-kit/agents/<peran>.md` (symlink ke `agents/` di repo ini).
 
 ---
 [← kembali ke README](../README.md)

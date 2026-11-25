@@ -3,9 +3,9 @@ name: develop-tiket
 description: Kerjakan tiket frontend web In Progress sampai Ready To Review (gerbang validasi, worktree tiket, Matriks env, rencana, kode TDD, review, uji Playwright per ukuran layar + aksesibilitas, deploy pratinjau, PR/MR, komentar, geser tiket). Dipanggil lewat `/develop-tiket KODE... [--solo|--tim] [--batch|--separate] [--uat]` dari workspace domain Orca. Use when asked to develop, implement, or fix a ticket (Jira, GitHub, GitLab, ...) for the web frontend; kata kunci - kerjakan tiket, develop tiket, implementasi tiket.
 argument-hint: KODE-TIKET... [--solo|--tim] [--batch|--separate] [--uat]
 ---
-Kerjakan tiket di `$ARGUMENTS`. Sesi ini = **SPV**: ikuti `~/.claude/agents/spv.md` (tidak menulis kode produk, tidak memindah ke Done).
+Kerjakan tiket di `$ARGUMENTS`. Sesi ini = **SPV**: ikuti `~/.agent-workflow/frontend-kit/agents/spv.md` (tidak menulis kode produk, tidak memindah ke Done).
 
-Baca dulu (jangan disalin): `~/.claude/skills/_frontend-workflow-shared/rules.md`, `board.md`, `browser.md`, `credentials.md`, `deploy-release.md`, `report-format.md`, dan `~/.claude/agents/{planner,coder,reviewer,qa,release}.md`. Skrip: `$FRONTEND_WORKFLOW_DIR/bin/<skrip>`; `lock.sh`/`port-pick.sh` diawali `AGENT_LOCK_PID=$PPID`.
+Baca dulu (jangan disalin): `~/.agent-workflow/frontend-kit/skills/_shared/rules.md`, `board.md`, `browser.md`, `credentials.md`, `deploy-release.md`, `report-format.md`, dan `~/.agent-workflow/frontend-kit/agents/{planner,coder,reviewer,qa,release}.md`. Skrip: `$FRONTEND_WORKFLOW_DIR/bin/<skrip>`; `lock.sh`/`port-pick.sh` diawali `AGENT_LOCK_PID=$PPID`.
 
 **Alur** (`--batch` default; terpisah dari `--solo`/`--tim`):
 - **`--batch`:** semua tiket = satu batch: satu rencana, satu branch batch lokal, **satu build produksi + server preview** untuk QA, satu deploy pratinjau batch bila hosting memakai CLI. Proses berat jalan sekali untuk semua tiket, di **titik tunggu** langkah 5 dan 9.
@@ -54,7 +54,7 @@ flowchart TD
   | Reviewer | `claude-opus-5-5` | bukan Coder tiket itu |
   | QA (1–3) | `claude-sonnet-5-5` | port + akun dari SPV |
   | Release | `claude-haiku-5-5` | |
-  Isi tugas: "Ikuti `~/.claude/agents/<peran>.md`", skill internal yang dijalankan, KODE, AC/TC, worktree + branch, batas file, port/akun, mockup per ukuran layar, folder laporan. Pantau sampai tuntas, hentikan teammate yang selesai (`rules.md` → Orkestrasi).
+  Isi tugas: "Ikuti `~/.agent-workflow/frontend-kit/agents/<peran>.md`", skill internal yang dijalankan, KODE, AC/TC, worktree + branch, batas file, port/akun, mockup per ukuran layar, folder laporan. Pantau sampai tuntas, hentikan teammate yang selesai (`rules.md` → Orkestrasi).
 - **2c:** SPV memeriksa rencana terhadap kondisi nyata (port, batch, guard) sebelum membagi tugas. Planner **Tidak bisa** / tidak tersedia → SPV menulis sendiri dan mencatatnya.
 - **3:** SPV menjawab daftar cek silang Coder (kontrak, desain per ukuran layar) dari Acuan + Matriks env; tidak ada jawaban → tanya user. Coder tidak bisa membaca tiket/dokumen: mockup dan kontrak disertakan di tugas.
 - **4:** lewat 2 putaran revisi (tim) → Planner menganalisis akar masalah + revisi rencana; rencana sudah direvisi 2 kali dan masih gagal → berhenti dan tanya.

@@ -1,6 +1,6 @@
 # Frontend-Agent-Workflow
 
-Tim agen AI (Claude Code) yang mengerjakan tiket di proyek **frontend web**, dari cek tiket sampai siap direview:
+Tim agen AI yang mengerjakan tiket di proyek **frontend web**, dari cek tiket sampai siap direview:
 
 ```mermaid
 flowchart LR
@@ -13,24 +13,42 @@ flowchart LR
 
 Kamu cukup mengetik satu perintah. Agen membaca tiket, menulis kode beserta tesnya, menguji di browser (laptop, tablet, HP), membuat halaman pratinjau, membuka PR, lalu menulis komentar di tiket. Keputusan penting (deploy ke production, merge, tiket ke Done) **tetap di tanganmu**.
 
+Bisa dipakai di **Claude Code, OpenAI Codex, Gemini CLI, GitHub Copilot, Cursor, OpenCode**, atau agen coding lain yang membaca `AGENTS.md`; untuk semua project atau satu project saja.
+
 Kit ini kembaran [kit Mobile](https://github.com/roiskhoiron/mobiledev-agent-workflow). Bedanya: device diganti browser, build aplikasi diganti deploy, Maestro diganti Playwright.
 
 ---
 
 ## 1. Pasang (sekali per komputer)
 
-**Butuh:** [Claude Code](https://claude.com/claude-code), `git`, `jq`, `python3` + Pillow, Node.js + Playwright, `gh` (GitHub) atau `glab` (GitLab) yang sudah login. Orca disarankan untuk kerja paralel.
+**Butuh:** satu agen coding (lihat tabel di bawah), `git`, `jq`, `python3` + Pillow, Node.js + Playwright, `gh` (GitHub) atau `glab` (GitLab) yang sudah login. Orca disarankan untuk kerja paralel.
 
-**Platform tiket bebas:** Jira, GitHub (Issues/Projects), GitLab (Issue Board), Linear, atau lainnya. Tidak ada pilihan bawaan; agen menanyakannya di awal (lihat langkah 2). Pakai Jira atau Linear → sambungkan juga connector-nya di Claude.
+**Platform tiket bebas:** Jira, GitHub (Issues/Projects), GitLab (Issue Board), Linear, atau lainnya. Tidak ada pilihan bawaan; agen menanyakannya di awal (lihat langkah 2). Pakai Jira atau Linear → sambungkan juga connector-nya di agen coding-mu.
 
 ```bash
 pip install pillow
 npm i -g playwright && npx playwright install chromium
 git clone https://github.com/roiskhoiron/Frontend-Agent-Workflow.git
 cd Frontend-Agent-Workflow
-./install.sh
+./install.sh             # pilih agen coding + global/project
 bash tests/run.sh        # harus muncul: ALL PASS
 ```
+
+Installer menanyakan dua hal: **agen coding mana** (boleh lebih dari satu) dan **global** (semua project) atau **project** (satu folder). Bisa juga langsung:
+
+```bash
+./install.sh --agent codex --scope global
+./install.sh --agent claude,gemini --scope project --project ~/kode/toko-web
+```
+
+| Agen coding | Skill | Pagar keamanan otomatis |
+| --- | --- | --- |
+| Claude Code | ✓ | ✓ shell, edit file, tiket |
+| OpenAI Codex, Gemini CLI, GitHub Copilot | ✓ | ✓ shell, edit file |
+| Cursor | ✓ | ✓ shell saja |
+| OpenCode, agen lain (`generic`) | ✓ | — (aturan saja) |
+
+Mode tim (beberapa agen sekaligus) paling lengkap di Claude Code; di agen lain memakai subagent bawaannya, atau otomatis jalan solo.
 
 `install.sh` aman dijalankan ulang. Kalau kit Mobile sudah terpasang, installer berhenti dan menyebut perintah yang bentrok; pakai `./install.sh --force` bila ingin beralih ke kit frontend. Detail: [docs/pasang.md](docs/pasang.md).
 
@@ -44,7 +62,7 @@ bash tests/run.sh        # harus muncul: ALL PASS
 2. Jalankan perintah pertamamu. Pertanyaan pertama agen: **"Tiket project ini dikelola di mana?"** Jawab Jira, GitHub, GitLab, Linear, atau lainnya. Belum punya papan tiket atau bingung? Agen menyarankan **GitHub Projects** (repo di GitHub) atau **GitLab Issue Board** (repo di GitLab) dan memberi langkah membuatnya.
 
    Setelah itu agen **bertanya sekali** lalu mengingatnya: kolom/status papan yang dipakai, branch utama, hosting, server API, ukuran layar yang wajib diuji, dan tempat menyimpan laporan. Jawab saja; agen selalu memberi satu saran.
-3. Untuk kerja tim (beberapa agen sekaligus), buka Claude dengan `claude --teammate-mode auto`.
+3. Claude Code + kerja tim: buka dengan `claude --teammate-mode auto`.
 
 ## 3. Pakai
 
@@ -92,7 +110,8 @@ bash tests/run.sh        # harus muncul: ALL PASS
 | `DIBLOKIR oleh guard: ...` | Wajar, itu pagar bekerja. Baca pesannya; biasanya menyebut cara yang benar |
 | `Jalankan dari workspace domain` | Buka workspace kerja di Orca (bukan root project), ulangi perintah |
 | `belum punya daftar status` | Pilih kolom/status papan yang ditunjukkan agen untuk Todo, In Progress, Ready To Review |
-| `Teammate mode mati` | Buka ulang Claude dengan `claude --teammate-mode auto` |
+| `Teammate mode mati` (Claude Code) | Buka ulang dengan `claude --teammate-mode auto` |
+| Pagar tidak jalan di Codex/Gemini (scope project) | Trust project di agen itu dulu; hook project baru aktif setelah dipercaya |
 
 Lainnya: [docs/masalah-umum.md](docs/masalah-umum.md).
 
@@ -104,7 +123,7 @@ Lainnya: [docs/masalah-umum.md](docs/masalah-umum.md).
 | [Tim agen](docs/tim-agen.md) | Peran, nama, dan model tiap agen |
 | [Pagar keamanan](docs/pagar-keamanan.md) | Yang diblokir guard dan kapan agen bertanya |
 | [Alat + MCP](docs/alat.md) | Skrip `bin/`, alat uji/deploy, pembersihan otomatis |
-| [Pasang](docs/pasang.md) | Instalasi detail dan bentrok dengan kit Mobile |
+| [Pasang](docs/pasang.md) | Pilihan agen coding + scope, apa yang dipasang per agen, bentrok dengan kit Mobile |
 | [Masalah umum](docs/masalah-umum.md) | Gejala dan solusinya |
 | [Rancangan dan keputusan](docs/design-summary.md) | Beda dengan Mobile, keputusan desain, pertanyaan terbuka |
 
@@ -114,9 +133,9 @@ Lainnya: [docs/masalah-umum.md](docs/masalah-umum.md).
 | --- | --- |
 | `skills/` | 5 skill flow, 34 skill internal, aturan bersama di `skills/_shared/` |
 | `agents/` | 15 peran agen |
-| `hooks/guard-frontend.sh` | Pagar keamanan |
+| `hooks/` | Pagar keamanan `guard-frontend.sh` + `guard-adapter.sh` (penerjemah hook agen lain) |
 | `bin/` | Skrip pembantu (kunci port/akun, screenshot bertanda, tracing rilis, pembersihan) |
-| `templates/` | Template akun uji dan blok `CLAUDE.md` global |
+| `templates/` | Template akun uji dan blok instruksi agen (`CLAUDE.md`/`AGENTS.md`/`GEMINI.md`) |
 | `tests/` | Tes kit: `bash tests/run.sh` |
 | `docs/` | Panduan lengkap |
 

@@ -8,13 +8,24 @@ Berlaku untuk semua agen dan skill: skill flow (`/validate-tiket`, `/develop-tik
 - Skill internal boleh dipakai sendiri untuk debugging, tetapi gerbang (validasi, review, izin) tetap berlaku.
 - Teammate (Coder, QA, ...) juga boleh menjalankan skill internal yang disebut di tugasnya.
 
+## Agen coding yang didukung
+Kit ini netral terhadap agen coding. `install.sh --agent <nama> --scope global|project` memasang skill, pagar, dan instruksi untuk tiap agen (detail: `docs/pasang.md`). Konsep yang berbeda per agen:
+
+| Konsep di dokumen ini | Claude Code | Agen coding lain (Codex, Gemini CLI, Copilot, Cursor, OpenCode, lainnya) |
+|---|---|---|
+| Menjalankan skill internal | tool Skill / `/nama` | fitur skill agen itu (`.agents/skills`; Codex `$nama` atau `/skills`, OpenCode tool `skill`); tanpa fitur skill → baca `SKILL.md` dari `$FRONTEND_WORKFLOW_DIR/skills/<nama>/` lalu ikuti |
+| Teammate / tool Agent / SendMessage (`--tim`) | agent teams | subagent bawaan agen itu bila ada (brief yang sama, file peran dari `$FRONTEND_WORKFLOW_DIR/agents/`); tidak ada → **solo otomatis**, sebut di laporan |
+| `model` per peran | frontmatter `agents/*.md` | model yang tersedia di agen itu; tulis model yang dipakai di laporan |
+| File instruksi project | `CLAUDE.md` | `AGENTS.md` (Codex, Copilot, Cursor, OpenCode), `GEMINI.md` (Gemini CLI) |
+| Pagar | hook `PreToolUse` | hook agen itu lewat `hooks/guard-adapter.sh` bila tersedia; tanpa hook → aturan di bawah tetap wajib ditaati agen |
+
 ## Lokasi
-- Dokumen bersama: `~/.claude/skills/_frontend-workflow-shared/<file>.md`.
+- Dokumen bersama: `~/.agent-workflow/frontend-kit/skills/_shared/<file>.md`.
 - Skrip: `$FRONTEND_WORKFLOW_DIR/bin/<skrip>`. Jika `FRONTEND_WORKFLOW_DIR` kosong, isi dengan folder repo:
-  `export FRONTEND_WORKFLOW_DIR="$(cd "$(readlink ~/.claude/skills/_frontend-workflow-shared)/../.." && pwd -P)"`
+  `export FRONTEND_WORKFLOW_DIR="$(cd ~/.agent-workflow/frontend-kit && pwd -P)"` (`~/.agent-workflow/frontend-kit` = symlink ke repo kit, dibuat `install.sh` untuk semua agen coding).
   Tiap panggilan Bash = shell baru: ulangi export ini di awal panggilan yang memakai skrip.
 - State lokal (bukan di repo, dipakai bersama kit Mobile bila terpasang): `${AGENT_WORKFLOW_STATE:-$HOME/.agent-workflow}/` — `board-status.json` (status papan; `jira-transitions.json` kit Mobile juga dibaca), kunci di `locks/`, penanda mode audit di `audit/`, daftar `build-roots.txt` (diisi user).
-- **Lokasi khusus project tidak pernah ditulis di konfigurasi global** (agen, skill, rules, guard, CLAUDE.md global). Semuanya ada di **memory project** Claude Code (`MEMORY.md` project, tipe `reference`) dan `## Catatan agen` di `CLAUDE.md` project. Belum ada → periksa dulu, tanya user sekali (dengan satu saran), simpan, lalu pakai. Path berubah/tidak ditemukan → perbarui memory itu setelah bertanya.
+- **Lokasi khusus project tidak pernah ditulis di konfigurasi global** (agen, skill, rules, guard, file instruksi global). Semuanya ada di **memory project** = file `${AGENT_WORKFLOW_STATE:-$HOME/.agent-workflow}/projects/<owner>__<repo>.md` (dari `git remote get-url upstream`; tanpa upstream → `origin`), satu bagian `## <kunci>` per isian, plus `## Catatan agen` di file instruksi project (`CLAUDE.md`/`AGENTS.md`/`GEMINI.md`). File ini sama untuk semua agen coding; Claude Code boleh juga mencerminkannya di memory project-nya. Belum ada → periksa dulu, tanya user sekali (dengan satu saran), simpan, lalu pakai. Path berubah/tidak ditemukan → perbarui memory itu setelah bertanya.
 
 ### Isi memory project (dibaca semua skill)
 | Kunci | Isi | Diisi oleh |
@@ -53,13 +64,13 @@ Kredensial tidak pernah disimpan di memory (lihat `credentials.md`).
 | Auditor | opus (`claude-opus-5-5`) | `/audit-issue`: kode, log, reproduksi di browser | menulis repo/tiket |
 | Analis | opus (`claude-opus-5-5`) | `/audit-issue`: lampiran | menulis repo/tiket |
 
-Management (SPV, Planner, Validator, Reviewer, Release) memutuskan dan berbicara ke luar: tiket, platform dokumentasi, git remote, hosting. Development (Coder, QA) hanya kode dan browser; satu-satunya akses remote Coder = push branch tiketnya sendiri ke `origin`. Planner hanya penasihat SPV. Tim validasi (PdM, Product Designer, Contract Runner, HoE, Spesialis eskalasi, PjM) hanya-baca dan melapor ke Validator. Housekeeping = skrip shell, tanpa agen. Model diubah di `~/.claude/agents/<peran>.md`.
+Management (SPV, Planner, Validator, Reviewer, Release) memutuskan dan berbicara ke luar: tiket, platform dokumentasi, git remote, hosting. Development (Coder, QA) hanya kode dan browser; satu-satunya akses remote Coder = push branch tiketnya sendiri ke `origin`. Planner hanya penasihat SPV. Tim validasi (PdM, Product Designer, Contract Runner, HoE, Spesialis eskalasi, PjM) hanya-baca dan melapor ke Validator. Housekeeping = skrip shell, tanpa agen. Model diubah di `~/.agent-workflow/frontend-kit/agents/<peran>.md`.
 
 ## Mode kerja
 - **Diawasi**: sesi biasa, user menyetujui izin.
 - **Otonom**: bypass permission. Pagar di bawah tetap aktif di kedua mode.
 
-## Selalu diblokir (hook `guard-frontend.sh`)
+## Selalu diblokir (hook `guard-frontend.sh`, bila agen coding punya hook)
 - `git push` ke remote selain `origin` (fork), termasuk `--tags` dan hapus branch. Pengecualian: tag versi `vX.Y.Z` yang ditulis eksplisit (tanpa force/hapus) boleh ke `origin` dan `upstream`.
 - Force-push atau hapus `main`/`master`/`develop`.
 - `rm -r`/`rm -rf` di luar folder project. Pengecualian: artefak yang bisa dibuat ulang (`node_modules`, `.next`, `.nuxt`, `.output`, `.svelte-kit`, `dist`, `build`, `.turbo`, `.vite`, `.parcel-cache`, `.cache`, `coverage`, `playwright-report`, `test-results`, `storybook-static`, `.angular`) di worktree lain repo yang sama atau di folder dari `build-roots.txt`; isi `/tmp/qa/` bebas dihapus.
@@ -83,7 +94,7 @@ Jangan mencari jalan memutar. Jika diblokir, laporkan pesannya ke SPV/user.
 Cara tanya: teammate → SPV lewat SendMessage; SPV/sesi utama → tanya di chat dengan ringkasan temuan + **satu saran**.
 
 ## Periksa dulu, lalu tanya
-Sebelum bertanya, kumpulkan fakta sendiri (git log, branch, `package.json`, konfigurasi hosting `vercel.json`/`netlify.toml`/`firebase.json`/`wrangler.toml`, file `.env.example`). Baca dulu `## Catatan agen` di `CLAUDE.md` project. Agen tidak menulis `CLAUDE.md` sendiri: jawaban user + temuan diberikan sebagai blok `## Catatan agen` siap tempel untuk di-commit user. Kredensial tidak pernah dicatat.
+Sebelum bertanya, kumpulkan fakta sendiri (git log, branch, `package.json`, konfigurasi hosting `vercel.json`/`netlify.toml`/`firebase.json`/`wrangler.toml`, file `.env.example`). Baca dulu `## Catatan agen` di `CLAUDE.md` project. Agen tidak menulis file instruksi project (`CLAUDE.md`/`AGENTS.md`/`GEMINI.md`) sendiri: jawaban user + temuan diberikan sebagai blok `## Catatan agen` siap tempel untuk di-commit user. Kredensial tidak pernah dicatat.
 
 ## Workspace & worktree (Orca)
 Workspace = item Orca tempat terminal agen tampil: git worktree, atau workspace folder (`<repo-id>::<path>::workspace:<uuid>`).
@@ -109,7 +120,7 @@ Workspace = item Orca tempat terminal agen tampil: git worktree, atau workspace 
 
 **Orkestrasi** (SPV sebagai lead): tiap worker = **teammate** Claude Code (agent teams), tampil sebagai panel split di tab SPV.
 - **Syarat:** sesi SPV jalan dengan teammate mode (`claude --teammate-mode auto`, atau `/config` → Teammate mode = auto). Tool Agent tanpa parameter `name` = mode itu mati → tanya user: buka ulang (saran) atau lanjut solo.
-- **Panggil:** tool Agent dengan `name: "<Nama>-<Label><n>"`, `subagent_type: <peran>`, `model` sesuai peran (Planner dan Spesialis eskalasi: jangan isi `model`). Prompt: "Ikuti `~/.claude/agents/<peran>.md`" + tugas (KODE, worktree, batas file, port/akun, skill internal yang dijalankan, folder laporan).
+- **Panggil:** tool Agent dengan `name: "<Nama>-<Label><n>"`, `subagent_type: <peran>`, `model` sesuai peran (Planner dan Spesialis eskalasi: jangan isi `model`). Prompt: "Ikuti `~/.agent-workflow/frontend-kit/agents/<peran>.md`" + tugas (KODE, worktree, batas file, port/akun, skill internal yang dijalankan, folder laporan).
 - **Lapor & tanya:** lewat SendMessage ke SPV. Daftar tugas bersama tim melacak tugas per tiket.
 - **Pantau sampai tuntas (wajib):** tunggu dalam rentang ±10 menit, tulis satu baris status ke user tiap rentang; teammate diam → minta status; tetap diam → cek jejaknya (commit/push, file laporan, kunci); macet → lepas kuncinya, hentikan, tugaskan ulang ke nama berikutnya. Tugas selesai hanya bila hasilnya terbukti ada (commit ter-push, komentar review, `report.md`, link). Hasil terbukti → hentikan teammate itu.
 - **Pakai ulang:** tugas lanjutan untuk agen yang sama → SendMessage ke nama yang sama. Pekerjaan paralel → nama berikutnya.

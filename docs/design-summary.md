@@ -27,7 +27,7 @@ Alur kanban; tim agen dan modelnya; mode Diawasi/Otonom dengan pagar aktif di ke
 | Keputusan | Alasan |
 |---|---|
 | 34 skill internal diimplementasikan sebagai skill terpisah; skill flow hanya berisi urutan + gerbang; `tests/skills_test.sh` memastikan skill internal tidak saling memanggil | Mengikuti "Skill set di tiap flow"; urutan kerja terlihat dari flow |
-| Nama folder bersama `_frontend-workflow-shared`, variabel `FRONTEND_WORKFLOW_DIR`, guard `guard-frontend.sh` | Tidak menimpa kit Mobile; state `~/.agent-workflow` (kunci, `jira-transitions.json`) tetap dipakai bersama |
+| Pointer kit `~/.agent-workflow/frontend-kit`, variabel `FRONTEND_WORKFLOW_DIR`, guard `guard-frontend.sh` | Tidak menimpa kit Mobile; state `~/.agent-workflow` (kunci, `jira-transitions.json`) tetap dipakai bersama |
 | `install.sh` menolak bila nama perintah/agen sudah dipasang kit lain, kecuali `--force` | Nama perintah sama dengan Mobile; mencegah tertimpa diam-diam |
 | `repo-markdown` = worktree `<repo>-docs` di branch `agent-docs` milik `origin`, link = URL file di forge | Validasi terjadi sebelum ada branch tiket, worktree primary tidak boleh diedit, dan laporan butuh link untuk komentar tiket |
 | Planner menulis rencana ke file lokal; SPV yang menerbitkan (`/write-report`) | Planner tetap tanpa akses tulis ke luar, apa pun platform dokumentasinya |
@@ -36,6 +36,8 @@ Alur kanban; tim agen dan modelnya; mode Diawasi/Otonom dengan pagar aktif di ke
 | Guard tidak memblokir deploy production di mode biasa (hanya di mode audit) | Sama dengan Mobile: upload prod = aturan berhenti-dan-tanya; penanda izin yang bisa dibuat agen sendiri tidak memberi keamanan nyata |
 | **Platform tiket tidak punya default** (memory = none → tanya user di awal; bingung → saran GitHub Projects untuk repo GitHub, GitLab Issue Board untuk repo GitLab). Operasi per platform di `board.md`, status di `board-status.json`, KODE selalu `<PREFIX>-<nomor>` | Rancangan hanya meminta `/setup-board` mencatat platform; tim tidak selalu memakai Jira |
 | Guard memblokir penutupan issue dan status di luar `board-status.json` untuk Jira, GitHub Projects, dan label; PR hanya `Refs #n` | Menutup issue = Done = hak manusia, di platform mana pun |
+| **Netral agen coding**: `install.sh --agent <claude|codex|gemini|copilot|cursor|opencode|generic> --scope global|project`; skill non-Claude di `.agents/skills` (dibaca Codex, Gemini CLI, Copilot, Cursor, OpenCode); semua path skill lewat `~/.agent-workflow/frontend-kit`; memory project = file `~/.agent-workflow/projects/<owner>__<repo>.md`; pagar lewat `guard-adapter.sh` di hook tiap agen | Tim memakai agen coding berbeda; satu sumber aturan untuk semuanya |
+| Scope project: symlink dan config hook lokal masuk `.git/info/exclude`; blok instruksi di `AGENTS.md`/`CLAUDE.md`/`GEMINI.md` dibiarkan untuk di-commit | Path lokal tidak boleh bocor ke repo tim |
 | Port default 4100–4199, kunci `port:<n>` | Agen paralel tidak saling menimpa dev server |
 | Gerbang a11y = pelanggaran critical/serious **baru** di area tiket | Pelanggaran lama tidak memblokir tiket yang tidak menyentuhnya |
 | Matriks browser default Chromium desktop 1440×900, tablet 768×1024, ponsel 390×844 | Angka awal, ditanya sekali per project |
