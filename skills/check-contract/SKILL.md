@@ -6,7 +6,7 @@ argument-hint: KODE
 Cek kontrak API untuk tiket `$ARGUMENTS`. Baca: `rules.md`, `credentials.md`.
 
 ## Langkah
-1. Daftar endpoint yang disentuh tiket (dari tiket, mockup, dan kode klien: `git grep` path di ref `upstream/<protected>`).
+1. Daftar endpoint yang disentuh tiket (dari tiket, prototipe (folder `data/` contoh dari contract), dan kode klien: `git grep` path di ref `upstream/<protected>`).
 2. Lokasi spec OpenAPI dan kontrak Pact dari memory project (hasil sinkron dokumen). Tidak ada → "tidak ada", lewati 3–4 untuk endpoint itu.
 3. **Schemathesis** hanya endpoint tiket: dev penuh (`schemathesis run <spec> --url <dev> --include-path <path>`); staging/production hanya method aman (GET/HEAD/OPTIONS), tanpa fuzzing, tanpa menulis data. **Pact:** frontend = konsumen; verifikasi kontrak yang ada terhadap provider dev bila ada broker/berkas pact, interaksi aman saja untuk staging/production.
 4. **Diff spec vs kode klien** di ref: path, method, field request/response, tipe (TypeScript), wajib/opsional, kode galat yang ditangani UI.

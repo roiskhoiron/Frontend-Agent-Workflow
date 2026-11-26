@@ -11,7 +11,7 @@ flowchart LR
   E -->|/branch-manager| F[Rilis + tag + production]
 ```
 
-Kamu cukup mengetik satu perintah. Agen membaca tiket, menulis kode beserta tesnya, menguji di browser (laptop, tablet, HP), membuat halaman pratinjau, membuka PR, lalu menulis komentar di tiket. Keputusan penting (deploy ke production, merge, tiket ke Done) **tetap di tanganmu**.
+Kamu cukup mengetik satu perintah. Agen membaca tiket, menulis kode beserta tesnya, menguji di browser (laptop, tablet, HP) dan membandingkannya dengan **prototipe dari workflow UI/UX** state demi state, membuat halaman pratinjau, membuka PR, lalu menulis komentar di tiket. Keputusan penting (deploy ke production, merge, tiket ke Done) **tetap di tanganmu**.
 
 Bisa dipakai di **Claude Code, OpenAI Codex, Gemini CLI, GitHub Copilot, Cursor, OpenCode**, atau agen coding lain yang membaca `AGENTS.md`; untuk semua project atau satu project saja.
 
@@ -61,7 +61,7 @@ Mode tim (beberapa agen sekaligus) paling lengkap di Claude Code; di agen lain m
    ```
 2. Jalankan perintah pertamamu. Pertanyaan pertama agen: **"Tiket project ini dikelola di mana?"** Jawab Jira, GitHub, GitLab, Linear, atau lainnya. Belum punya papan tiket atau bingung? Agen menyarankan **GitHub Projects** (repo di GitHub) atau **GitLab Issue Board** (repo di GitLab) dan memberi langkah membuatnya.
 
-   Setelah itu agen **bertanya sekali** lalu mengingatnya: kolom/status papan yang dipakai, branch utama, hosting, server API, ukuran layar yang wajib diuji, dan tempat menyimpan laporan. Jawab saja; agen selalu memberi satu saran.
+   Setelah itu agen **bertanya sekali** lalu mengingatnya: kolom/status papan yang dipakai, repo desain (prototipe workflow UI/UX + alamat GitHub Pages-nya), branch utama, hosting, server API, ukuran layar yang wajib diuji, dan tempat menyimpan laporan. Jawab saja; agen selalu memberi satu saran.
 3. Claude Code + kerja tim: buka dengan `claude --teammate-mode auto`.
 
 ## 3. Pakai
@@ -96,6 +96,7 @@ Mode tim (beberapa agen sekaligus) paling lengkap di Claude Code; di agen lain m
 | Istilah | Artinya |
 | --- | --- |
 | **KODE** | Nomor tiket, mis. `WEB-123` (Jira) atau `#123` dari GitHub/GitLab (agen menulisnya `WEB-123`) |
+| **Prototipe** | Acuan desain dari workflow UI/UX: tiap state layar punya alamat sendiri (mis. `.../prototypes/WEB-123/login.html?state=gagal`). Kodenya tidak disalin ke produk; yang dipakai langsung hanya **token** (warna, ukuran) |
 | **AC / TC** | Syarat selesai di tiket / langkah uji. Hasil uji: Lulus, Gagal, atau Tertahan (dengan alasan) |
 | **Halaman pratinjau** | Salinan situs dari perubahan tiket, bisa dibuka siapa saja untuk dicoba |
 | **Worktree tiket** | Folder kerja khusus satu tiket (`<repo>-<nomor>`), supaya beberapa tiket bisa dikerjakan bersamaan |
@@ -119,7 +120,7 @@ Lainnya: [docs/masalah-umum.md](docs/masalah-umum.md).
 
 | Halaman | Isi |
 | --- | --- |
-| [Alur kerja + skill set](docs/alur-kerja.md) | Langkah tiap perintah, semua flag, 34 skill internal |
+| [Alur kerja + skill set](docs/alur-kerja.md) | Langkah tiap perintah, semua flag, masukan desain (prototipe), 34 skill internal |
 | [Tim agen](docs/tim-agen.md) | Peran, nama, dan model tiap agen |
 | [Pagar keamanan](docs/pagar-keamanan.md) | Yang diblokir guard dan kapan agen bertanya |
 | [Alat + MCP](docs/alat.md) | Skrip `bin/`, alat uji/deploy, pembersihan otomatis |

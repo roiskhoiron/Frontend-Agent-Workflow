@@ -48,13 +48,13 @@ python3 "$FRONTEND_WORKFLOW_DIR/bin/annotate.py" ${TMPDIR:-/tmp}/qa/PROJ-1/TC1-0
 - Nama file urut: `TC1-desktop-01.png`, `TC1-ponsel-01.png`. Satu hal penting per kotak.
 - Semua file kerja di `${TMPDIR:-/tmp}/{validate,qa,audit}/...`, tidak di repo (kecuali spec Playwright yang memang ditambahkan ke suite).
 
-## Bandingkan dengan mockup
-Tiap layar × ukuran layar: layout, spacing, warna/tipografi, teks, state kosong/loading/error/disabled, hover/focus, mode gelap (bila didukung), teks panjang/overflow. Sumber mockup dari Acuan tiket (Figma, gambar di tiket). Figma bisa dibuka lewat MCP/alat yang tersedia di sesi; tidak bisa → minta ekspor gambar ke user. Beda → kotak merah + label `beda: <apa>`.
+## Bandingkan dengan prototipe
+Acuan = alamat state prototipe di Acuan tiket (`design-input.md`). Tiap state × ukuran layar: screenshot prototipe dan halaman produk di viewport sama, `compare-shot.py`, lalu periksa: layout, spacing, warna/tipografi (token), teks, state kosong/memuat/berhasil/gagal/offline + state khas tiket, hover/focus, mode gelap (bila didukung), teks panjang/overflow. Beda nyata → kotak merah + label `beda: <apa>` (`annotate.py`). Project tanpa prototipe → gambar/mockup di tiket sebagai acuan (dicatat di laporan).
 
 ## Aksesibilitas
 - Jalankan axe di tiap halaman/state yang disentuh tiket, di desktop dan ponsel: `@axe-core/playwright` di spec project (`new AxeBuilder({ page }).analyze()`), atau `npx @axe-core/cli <url>` bila project belum punya.
 - **Gerbang:** pelanggaran `critical`/`serious` yang muncul di elemen yang disentuh tiket = TC gagal. Pelanggaran lama di luar area tiket dicatat di laporan sebagai temuan, tidak memblokir.
-- Tambahan manual singkat: navigasi keyboard (Tab urut, fokus terlihat, Esc menutup dialog), label form, teks alternatif gambar, kontras teks di mockup.
+- Tambahan manual singkat: navigasi keyboard (Tab urut, fokus terlihat, Esc menutup dialog), label form, teks alternatif gambar, kontras teks (token dari prototipe).
 
 ## Responsif
 - Tiap TC UI dijalankan di semua ukuran layar dari matriks. Tidak ada scroll horizontal di ponsel, target sentuh ≥ 44 px, teks tidak terpotong.

@@ -16,7 +16,9 @@
 | `page-shot.mjs` exit 1 | Selector tidak ditemukan; dicatat di laporan, tidak ditebak |
 | Link laporan tidak bisa dibuka | `repo-markdown`: branch `agent-docs` belum di-push atau fork privat; cek `git -C ../<repo>-docs log origin/agent-docs` |
 | Deploy pratinjau tidak muncul | Hosting otomatis per PR belum aktif, atau CLI hosting belum login. Agen bertanya; token tidak pernah ditulis ke file |
-| TC **Tertahan** | Tidak bisa diuji (endpoint belum ada, mockup tidak ada, akun tidak ada); alasannya tertulis di laporan |
+| `compare-shot.py` exit 1 | Halaman beda dari prototipe di atas ambang. QA melihat gambar banding; beda kecil font/anti-aliasing diabaikan, beda layout/warna/teks = TC gagal |
+| Agen bertanya repo desain | Project belum mencatat repo prototipe workflow UI/UX. Beri URL repo `<proyek>-design` dan alamat GitHub Pages-nya; belum memakai workflow UI/UX → jawab "belum", agen memakai gambar di tiket |
+| TC **Tertahan** | Tidak bisa diuji (endpoint belum ada, state prototipe tidak bisa dicapai, akun tidak ada); alasannya tertulis di laporan |
 
 ---
 [← kembali ke README](../README.md)

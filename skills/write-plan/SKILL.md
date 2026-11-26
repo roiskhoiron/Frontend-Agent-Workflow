@@ -8,8 +8,9 @@ Susun rencana untuk `$ARGUMENTS`. Masukan: Acuan tiket, Yang ditolak (bila ada),
 ## Langkah
 1. Baca laporan validasi, dokumen di Acuan, dan kode terkait di worktree tiket (hanya-baca). Informasi kurang → satu daftar pertanyaan ke SPV, satu putaran; belum terjawab → "Pertanyaan terbuka", status **Butuh jawaban**.
 2. Tulis `${TMPDIR:-/tmp}/plan/<KODE>/rencana.md` (`--batch`: satu file untuk semua tiket) dengan bagian di `report-format.md` → Rencana:
+   - **Tugas desain:** tugas pertama tiket UI = sinkron token dari repo desain (ref tercatat); layar ditulis ulang di framework proyek dari prototipe + halaman handover, **bukan** menyalin kode prototipe.
    - **Tugas bernomor:** komponen/route/hook/store yang diubah, urutan, ketergantungan, pembagian per Coder dengan batas file; perubahan dependensi `package.json` disebut eksplisit.
-   - **Test case:** ID TC, AC, server (endpoint **Belum ada** di server itu → TC Tertahan di server itu, atau memakai mock dari kontrak bila disetujui), ukuran layar (semua dari matriks untuk TC UI), alat (Playwright, axe, Schemathesis, Pact, unit/komponen), halaman mockup acuan.
+   - **Test case:** ID TC, AC, server (endpoint **Belum ada** di server itu → TC Tertahan di server itu, atau memakai mock dari kontrak bila disetujui), ukuran layar (semua dari matriks untuk TC UI), alat (Playwright, axe, Schemathesis, Pact, unit/komponen), alamat state prototipe acuan (satu TC UI per state yang relevan, `design-input.md`).
    - **Yang ditolak:** tiap poin → nomor tugas dan/atau ID TC (poin tanpa tugas/TC tidak boleh).
    - **Risiko untuk Reviewer:** XSS/sanitasi, token/rahasia di bundle, otorisasi sisi klien, ukuran bundle, render berulang, layout shift, aturan bisnis yang mudah meleset.
 3. `--revisi`/`--eskalasi`: perbarui file yang sama, tambah bagian "Perubahan" (apa dan kenapa).

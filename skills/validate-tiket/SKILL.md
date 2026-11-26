@@ -5,7 +5,7 @@ argument-hint: KODE-TIKET... [--solo|--tim]
 ---
 Validasi tiket di `$ARGUMENTS`. Peranmu = **Validator**; di mode tim kamu juga **SPV**. Tidak menulis kode produk, tidak memindah tiket ke Done.
 
-Baca dulu (jangan disalin): `~/.agent-workflow/frontend-kit/skills/_shared/rules.md`, `board.md`, `browser.md`, `credentials.md`, `report-format.md`, dan `~/.agent-workflow/frontend-kit/agents/validator.md`; mode tim juga `~/.agent-workflow/frontend-kit/agents/{pdm,product-designer,contract-runner,hoe,pjm,eskalasi}.md`. Skrip: `$FRONTEND_WORKFLOW_DIR/bin/<skrip>` (export seperti di `rules.md`); `lock.sh`/`port-pick.sh` selalu diawali `AGENT_LOCK_PID=$PPID` di panggilan Bash yang sama.
+Baca dulu (jangan disalin): `~/.agent-workflow/frontend-kit/skills/_shared/rules.md`, `board.md`, `browser.md`, `design-input.md`, `credentials.md`, `report-format.md`, dan `~/.agent-workflow/frontend-kit/agents/validator.md`; mode tim juga `~/.agent-workflow/frontend-kit/agents/{pdm,product-designer,contract-runner,hoe,pjm,eskalasi}.md`. Skrip: `$FRONTEND_WORKFLOW_DIR/bin/<skrip>` (export seperti di `rules.md`); `lock.sh`/`port-pick.sh` selalu diawali `AGENT_LOCK_PID=$PPID` di panggilan Bash yang sama.
 
 Sesi ini bertindak langsung sebagai Validator/SPV (bukan subagen), supaya akses tiket dan dokumen ada di satu tempat. Tiket berurutan.
 - `--solo` (atau tanpa flag untuk tiket kecil/jelas): semua langkah sendiri.
@@ -29,7 +29,7 @@ flowchart LR
 | 4 | `/sync-docs` | sekali per sesi; ref masuk laporan |
 | 5a | `/reproduce-browser` | bug: di URL/versi tiket (kosong → staging/terbaru), ukuran layar tiket (kosong → desktop + ponsel) |
 | 5b | `/check-contract` | tiket yang menyentuh API |
-| 5c | cek desain | fitur UI: mockup per ukuran layar ada? state kosong/loading/error? Tidak ada mockup → paling tinggi **Layak dengan catatan** |
+| 5c | cek desain | fitur UI (`design-input.md`): prototipe `prototypes/<KODE>/` terbit? tiap state (kosong/memuat/berhasil/gagal/offline + khas tiket) punya alamat? halaman handover + token ada? Tidak ada prototipe → paling tinggi **Layak dengan catatan** |
 | 6 | `/find-related` | solo dan tim; link antar tiket hanya disarankan |
 | 7 | putuskan | tabel "Aturan keputusan" |
 | 8 | `/write-report` | jenis `validasi`; tunggu link |
@@ -42,7 +42,7 @@ flowchart LR
 | Informasi minim, AC inti kabur | Tidak layak | Tetap Todo; komentar berisi yang harus dilengkapi |
 | Bertabrakan dengan tiket/dokumen lain | Tidak layak sampai diputuskan | Sebut kedua tiket + kutipan; tanya user mana yang berlaku |
 | Tumpang tindih tapi selaras | Layak dengan catatan | Saran urutan atau penggabungan |
-| Tiket UI tanpa mockup | paling tinggi Layak dengan catatan | Minta mockup |
+| Tiket UI tanpa prototipe (atau state penting tanpa alamat) | paling tinggi Layak dengan catatan | Minta prototipe/state lewat workflow UI/UX |
 
 **Validasi ulang** (tiket kembali ke Todo, jejak dari `/read-ticket`): golongkan tiap penolakan — **implementasi meleset** (requirement tetap → **Layak** + daftar revisi) atau **requirement berubah/kurang** (cek ulang bisnis/mockup/kontrak terhadap dokumen terbaru; tidak jelas → tanya; putuskan dengan tabel di atas). Penolakan tidak diketahui → tanya user. Laporan = **delta** + bagian **Yang ditolak**. PR/MR sudah merged → catat bahwa putaran baru memakai branch `<jenis>/<KODE>-r<n>`.
 
@@ -51,7 +51,7 @@ Teammate paralel (tool Agent, `name` dari "Nama agen" di `rules.md`, `subagent_t
 | Peran | Model | Tugas (skill internal) |
 |---|---|---|
 | PdM | `claude-sonnet-5-5` | dokumen business discovery vs AC |
-| Product Designer | `claude-sonnet-5-5`; eskalasi `claude-opus-5-5` | mockup web vs halaman; bug UI → `/reproduce-browser` |
+| Product Designer | `claude-sonnet-5-5`; eskalasi `claude-opus-5-5` | prototipe per state vs halaman; bug UI → `/reproduce-browser` |
 | Contract Runner | `claude-sonnet-5-5` | `/check-contract`; hasil diteruskan ke HoE |
 | HoE | `claude-opus-5-5` | kode vs blueprint, kontrak; bug logika/API |
 | PjM | `claude-sonnet-5-5` | `/find-related` |

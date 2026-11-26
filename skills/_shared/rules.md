@@ -32,7 +32,8 @@ Kit ini netral terhadap agen coding. `install.sh --agent <nama> --scope global|p
 |---|---|---|
 | Platform tiket | **tidak ada default** (none → tanya user): Jira, GitHub Projects/Issues, GitLab Issue Board, Linear, ...; lokasi board, prefix KODE, nama status (`board.md`) | `/setup-board` |
 | Platform dokumentasi | `repo-markdown` (default), `claude-docs`, atau lainnya + lokasinya | `/setup-docs` |
-| Sumber dokumen | folder/repo business discovery, desain/mockup (Figma), kontrak API (OpenAPI, Pact), blueprint | `/sync-docs` |
+| Sumber dokumen | folder/repo business discovery, kontrak API (OpenAPI, Pact), blueprint | `/sync-docs` |
+| Repo desain | repo prototipe workflow UI/UX (`<proyek>-design`) + checkout lokal, alamat GitHub Pages, tujuan berkas token di repo kode (`design-input.md`) | `/sync-docs` |
 | Branch project | `<primary>` = branch produksi (sumber hotfix, tujuan PR rilis); `<protected>` = branch integrasi (sumber dan tujuan PR tiket); remote fork/utama bila bukan `origin`/`upstream`; **strategi merge** PR tiket (squash / merge commit) | `/setup-worktree` |
 | Framework | framework + package manager, perintah `dev`, `build`, `preview`, `test`, `lint`, `typecheck`, `e2e`; pustaka komponen; design system sebagai kode (ada/tidak) | `/setup-worktree` |
 | Env dan server API | env `dev` / `staging` / `production`: base URL API + URL situs; nama variabel env API di project (mis. `VITE_API_URL`, `NEXT_PUBLIC_API_URL`) | `/matrix-env` |
@@ -52,7 +53,7 @@ Kredensial tidak pernah disimpan di memory (lihat `credentials.md`).
 | Planner | fable (`claude-fable-5-2`) | rencana + test case tiket mode tim, analisis eskalasi; atas panggilan SPV | kode produk, tiket, deploy, memerintah agen lain |
 | Validator | opus (`claude-opus-5-5`) | `/validate-tiket`; mode tim = SPV validasi | kode produk |
 | PdM | sonnet (`claude-sonnet-5-5`) | `/validate-tiket` tim: dokumen business discovery | menulis repo/tiket/dokumen |
-| Product Designer | sonnet, eskalasi opus | `/validate-tiket` tim: mockup web vs halaman, reproduksi bug UI di browser | menulis repo/tiket/dokumen |
+| Product Designer | sonnet, eskalasi opus | `/validate-tiket` tim: prototipe (per state) vs halaman, reproduksi bug UI di browser | menulis repo/tiket/dokumen |
 | Contract Runner | sonnet (`claude-sonnet-5-5`) | Schemathesis + Pact endpoint tiket, diff kontrak; Matriks env | fuzzing/menulis data ke staging/production, menulis repo/tiket/dokumen |
 | HoE | opus (`claude-opus-5-5`) | `/validate-tiket` tim: kode vs blueprint, kontrak API, bug logika/API | menulis repo/tiket/dokumen |
 | Spesialis eskalasi | fable (`claude-fable-5-2`), on-demand | `/validate-tiket` tim: hanya saat pemicu eskalasi | menulis repo/tiket/dokumen, memutuskan |
@@ -60,7 +61,7 @@ Kredensial tidak pernah disimpan di memory (lihat `credentials.md`).
 | Reviewer | opus (`claude-opus-5-5`) | performa & keamanan sisi klien, lalu logika vs AC; review ditulis di PR/MR | review kode sendiri |
 | Release | haiku (`claude-haiku-5-5`) | Draft PR/MR, deploy pratinjau/staging, PR/MR siap review, dokumen + komentar + geser tiket, merge PR tiket setelah audit, PR revert, tag | Done, deploy production tanpa izin, merge PR rilis |
 | Coder | sonnet (`claude-sonnet-5-5`) | TDD di branch tiketnya, push rutin branch tiket ke `origin` | tiket, dokumen, push selain branch tiketnya, force-push, deploy |
-| QA | sonnet (`claude-sonnet-5-5`) | Playwright per ukuran layar vs mockup, aksesibilitas, Schemathesis, Pact; regresi | tiket, dokumen, push, deploy |
+| QA | sonnet (`claude-sonnet-5-5`) | Playwright per state prototipe × ukuran layar, aksesibilitas, Schemathesis, Pact; regresi | tiket, dokumen, push, deploy |
 | Auditor | opus (`claude-opus-5-5`) | `/audit-issue`: kode, log, reproduksi di browser | menulis repo/tiket |
 | Analis | opus (`claude-opus-5-5`) | `/audit-issue`: lampiran | menulis repo/tiket |
 

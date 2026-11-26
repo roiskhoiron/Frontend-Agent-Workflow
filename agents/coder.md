@@ -10,10 +10,11 @@ Baca dulu: `~/.agent-workflow/frontend-kit/skills/_shared/rules.md`, `browser.md
 
 ## Tugas
 1. Jalankan skill `/implement-tdd` untuk KODE, worktree, dan batas file dari SPV. Endpoint belum ada di dev dan rencana menyetujui mock → skill `/mock-api` (port dari SPV).
-2. Daftar cek silang (kontrak + desain per ukuran layar) dikirim ke SPV **sebelum** menulis kode; tunggu jawaban. Ragu di tengah jalan → tanya lagi, jangan menebak.
-3. Revisi dari Reviewer dan temuan QA dikerjakan di branch yang sama.
-4. Tugas tambahan dari SPV setelah QA lulus: salin spec Playwright TC yang stabil ke folder suite regresi (tag `@area-<modul>`; `@smoke-live` hanya bila baca saja), commit + push.
-5. Lapor ke SPV: ringkasan perubahan, commit, hasil lint/typecheck/test/build, desain acuan, micro-interaction, perubahan dependensi.
+2. Masukan desain (`design-input.md`): sinkron token dari repo desain, tulis ulang layar dari prototipe di framework proyek, jangan menyalin kode prototipe.
+3. Daftar cek silang (kontrak + layar × state dari prototipe) dikirim ke SPV **sebelum** menulis kode; tunggu jawaban. Ragu di tengah jalan → tanya lagi, jangan menebak.
+4. Revisi dari Reviewer dan temuan QA dikerjakan di branch yang sama.
+5. Tugas tambahan dari SPV setelah QA lulus: salin spec Playwright TC yang stabil ke folder suite regresi (tag `@area-<modul>`; `@smoke-live` hanya bila baca saja), commit + push.
+6. Lapor ke SPV: ringkasan perubahan, commit, hasil lint/typecheck/test/build, desain acuan, micro-interaction, perubahan dependensi.
 
 ## Tidak boleh
 - Tiket dan platform dokumentasi (baca maupun tulis).

@@ -39,7 +39,7 @@ Validasi ulang / revisi menambah file baru dengan akhiran putaran (`validasi-r2.
 4. **Satu bagian per TC** (`TC1 — judul`): kalimat pertama **Lulus**/**Tertahan** + alasan; langkah bernomor; screenshot bertanda per ukuran layar.
 5. **Temuan**: data uji (awalan KODE), akun (nama kunci), ref/commit/URL yang diuji, browser + ukuran layar, ref dokumen hasil `/sync-docs`, checklist tindak lanjut (`- [ ] ...`).
 
-**Mode tim**: setelah Keputusan, tambah bagian **Bisnis** (PdM), **Desain** (Product Designer; link mockup wajib), **Teknis** (HoE + Contract Runner + Spesialis eskalasi), **Ketergantungan** (PjM), masing-masing menyebut agen sumber `<Nama> (<Label>)` dan tingkat keyakinan.
+**Mode tim**: setelah Keputusan, tambah bagian **Bisnis** (PdM), **Desain** (Product Designer; alamat state prototipe + halaman handover wajib), **Teknis** (HoE + Contract Runner + Spesialis eskalasi), **Ketergantungan** (PjM), masing-masing menyebut agen sumber `<Nama> (<Label>)` dan tingkat keyakinan.
 **Validasi ulang**: laporan berbentuk delta (link laporan lama) + bagian **Yang ditolak** (poin, sumber komentar, golongan, saran tugas/TC).
 
 ## Rencana (`/write-plan`)
@@ -54,7 +54,7 @@ Judul `Rencana <KODE> — <judul singkat>`; bagian: Tujuan dan AC, Acuan tiket, 
 6. **Aksesibilitas**: tabel halaman/state → jumlah pelanggaran per tingkat → yang baru dari tiket ini.
 7. **Server**: tabel deploy → env + base URL API + hash; tabel TC × server (dev/staging/production); endpoint yang sudah/belum ada per server (Matriks env).
 8. **Regresi area terdampak**: modul → spec `@area-<modul>` → hasil; spec baru yang ditambahkan ke suite.
-9. **UI vs mockup**: tabel layar/state/ukuran → sesuai/beda, screenshot bertanda di samping acuan mockup.
+9. **UI vs prototipe**: tabel layar × state × ukuran → alamat prototipe → `diff_ratio` → sesuai/beda, gambar banding (halaman | prototipe | beda) dan screenshot bertanda; ref repo desain + hash token yang dipakai.
 10. **Temuan**: branch + commit, URL pratinjau, data uji, checklist tindak lanjut.
 
 ## Laporan audit (`/audit-issue`)

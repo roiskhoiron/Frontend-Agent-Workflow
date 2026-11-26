@@ -32,10 +32,10 @@ for r in $(cat $files | grep -oE 'FRONTEND_WORKFLOW_DIR/(bin|templates)/[A-Za-z0
   assert_eq yes "$([ -f "$REPO/${r#FRONTEND_WORKFLOW_DIR/}" ] && echo yes || echo no)" "rujukan $r ada"
 done
 # nama dokumen bersama yang disebut tanpa path (mis. `browser.md`) juga harus ada
-for r in $(cat $files | grep -oE '`(rules|board|browser|credentials|deploy-release|report-format|devices|build-release)\.md`' | tr -d '`' | sort -u); do
+for r in $(cat $files | grep -oE '`(rules|board|design-input|browser|credentials|deploy-release|report-format|devices|build-release)\.md`' | tr -d '`' | sort -u); do
   assert_eq yes "$([ -f "$REPO/skills/_shared/$r" ] && echo yes || echo no)" "dokumen bersama $r ada"
 done
-for d in rules board browser credentials deploy-release report-format; do
+for d in rules board design-input browser credentials deploy-release report-format; do
   assert_eq yes "$([ -f "$REPO/skills/_shared/$d.md" ] && echo yes || echo no)" "_shared/$d.md ada"
 done
 # netral agen coding: skill/agen tidak merujuk path khusus Claude Code (~/.claude/...)

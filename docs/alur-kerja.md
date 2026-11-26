@@ -49,7 +49,7 @@ flowchart TD
 | 2 | Worktree + branch tiket, Matriks env, rencana + test case, Draft PR/MR | Planner (tim) / SPV (solo), Release untuk Draft | Dokumen rencana dan Draft PR/MR |
 | 3 | Kode dengan tes dulu di branch tiket | Coder | Commit di-push rutin |
 | 4 | Review: keamanan sisi klien, performa, lalu logika vs AC | Reviewer | Komentar review: lolos atau revisi |
-| 5 | Uji per server: Playwright vs mockup di tiap ukuran layar, Pact konsumen, aksesibilitas | QA | Laporan uji + screenshot |
+| 5 | Uji per server: Playwright dibandingkan prototipe di tiap state dan ukuran layar, Pact konsumen, aksesibilitas | QA | Laporan uji + screenshot |
 | 6 | Deploy pratinjau selalu, env staging juga bila ada | Release | Link pratinjau |
 | 7 | Push terakhir, Draft PR/MR ditandai siap | Release | Link PR/MR |
 | 8 | Rangkum semua link di komentar tiket | Release | Komentar tiket |
@@ -59,11 +59,25 @@ Frontend boleh mulai sebelum endpoint ada di server dev: Coder bekerja terhadap 
 
 **Gerbang selesai per tiket:** semua TC Lulus di semua ukuran layar wajib (atau Tertahan + alasan), tidak ada pelanggaran aksesibilitas critical/serious baru, review tanpa temuan wajib, lint/typecheck/test/build lulus.
 
+## Masukan desain
+Acuan desain tiket adalah **prototipe dari workflow UI/UX** (repo desain `<proyek>-design` di GitHub Pages), bukan gambar mockup. Detail: `skills/_shared/design-input.md`.
+
+| Yang dirujuk | Bentuk | Dipakai oleh |
+|---|---|---|
+| Alamat tiap state | `.../prototypes/<KODE>/<layar>.html?state=gagal` | Planner, Coder, QA |
+| Halaman handover | Tujuan, perilaku, token yang dipakai, catatan per platform | Planner, Coder |
+| Token hasil bangun | CSS custom properties dari Style Dictionary (`build/css/tokens.css`) | Coder |
+
+Tiga aturan:
+- **Kode prototipe tidak disalin ke produk.** Layar ditulis ulang di framework proyek, dengan prototipe sebagai rujukan perilaku dan tampilan.
+- **Yang dipakai langsung hanya token.** Berkas token diambil dari repo desain, sehingga warna dan ukuran di produk sama dengan prototipe.
+- **QA membandingkan halaman dengan alamat state yang sama** di prototipe, satu state demi satu state (`compare-shot.py`).
+
 ## /validate-tiket versi web
 Baca tiket → reproduksi (bug) atau cek requirement/kontrak/desain (fitur) → screenshot bertanda → laporan → keputusan di tiket (**Layak** / **Layak dengan catatan** → In Progress; **Tidak layak** → tetap Todo).
 - **Reproduksi di browser** dan ukuran layar yang tertulis di tiket; tidak tertulis → browser utama di desktop dan ponsel.
 - **Tanda di screenshot:** kotak merah dan label kode AC dari posisi elemen di halaman, bukan ditebak.
-- **Mode tim** sama dengan Mobile; Product Designer membandingkan mockup web dengan halaman.
+- **Mode tim** sama dengan Mobile; Product Designer membandingkan prototipe web dengan halaman.
 - **Validasi ulang** (tiket kembali ke Todo): laporan delta + bagian "Yang ditolak".
 
 ## /rilis-tiket dan /branch-manager
@@ -87,7 +101,7 @@ Skill flow memanggil skill internal secara berurutan. Skill internal tidak salin
 |---|---|---|
 | `/reproduce-browser` | Reproduksi bug di browser + screenshot bertanda | `/reproduce-device` |
 | `/mock-api` | Mock server dari kontrak | — |
-| `/test-browser` | Playwright di tiap ukuran layar, bandingkan dengan mockup | `/test-device` |
+| `/test-browser` | Playwright di tiap ukuran layar, bandingkan dengan prototipe | `/test-device` |
 | `/check-a11y` | Cek aksesibilitas halaman | — |
 | `/deploy-preview` | Deploy pratinjau branch tiket | `/build-app` |
 | `/deploy-variant` | Deploy staging, dan production setelah izin | `/build-variant` |

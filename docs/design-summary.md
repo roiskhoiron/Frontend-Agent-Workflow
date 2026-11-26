@@ -11,6 +11,7 @@ Alur kanban; tim agen dan modelnya; mode Diawasi/Otonom dengan pagar aktif di ke
 | Tempat reproduksi dan uji | Device fisik, emulator, simulator | Browser: Playwright (+ browser tertanam Orca untuk melihat) |
 | Alat uji alur layar | Maestro, XCUITest | Playwright |
 | Uji API dan kontrak | Schemathesis, Pact | Sama (frontend = konsumen Pact) |
+| Acuan desain | Mockup | Prototipe workflow UI/UX: alamat per state, halaman handover, token |
 | Tanda di screenshot | Koordinat elemen di device | Posisi elemen di halaman (`page-shot.mjs` → `annotate.py`) |
 | Variasi yang diuji | Android dan iOS | Browser + ukuran layar dari matriks |
 | Hasil build | Build dev/beta/prod ke Firebase/TestFlight | Deploy pratinjau, staging, production |
@@ -38,6 +39,7 @@ Alur kanban; tim agen dan modelnya; mode Diawasi/Otonom dengan pagar aktif di ke
 | Guard memblokir penutupan issue dan status di luar `board-status.json` untuk Jira, GitHub Projects, dan label; PR hanya `Refs #n` | Menutup issue = Done = hak manusia, di platform mana pun |
 | **Netral agen coding**: `install.sh --agent <claude|codex|gemini|copilot|cursor|opencode|generic> --scope global|project`; skill non-Claude di `.agents/skills` (dibaca Codex, Gemini CLI, Copilot, Cursor, OpenCode); semua path skill lewat `~/.agent-workflow/frontend-kit`; memory project = file `~/.agent-workflow/projects/<owner>__<repo>.md`; pagar lewat `guard-adapter.sh` di hook tiap agen | Tim memakai agen coding berbeda; satu sumber aturan untuk semuanya |
 | Scope project: symlink dan config hook lokal masuk `.git/info/exclude`; blok instruksi di `AGENTS.md`/`CLAUDE.md`/`GEMINI.md` dibiarkan untuk di-commit | Path lokal tidak boleh bocor ke repo tim |
+| **Masukan desain = prototipe workflow UI/UX** (alamat per state, halaman handover, token Style Dictionary); aturan di `design-input.md`; token disinkron Coder dengan commit sendiri dan diperiksa Reviewer (`diff` dengan repo desain); QA membandingkan per state dengan `compare-shot.py` (selisih piksel hanya petunjuk, keputusan tetap QA) | Mengikuti bagian "Masukan desain" rancangan (rev 14) |
 | Port default 4100–4199, kunci `port:<n>` | Agen paralel tidak saling menimpa dev server |
 | Gerbang a11y = pelanggaran critical/serious **baru** di area tiket | Pelanggaran lama tidak memblokir tiket yang tidak menyentuhnya |
 | Matriks browser default Chromium desktop 1440×900, tablet 768×1024, ponsel 390×844 | Angka awal, ditanya sekali per project |
